@@ -329,6 +329,8 @@ function eventsView() {
   h += `<div class="row2"><button class="btn big" data-act="newEv" data-type="seance">+ Séance</button><button class="btn big match" data-act="newEv" data-type="match">+ Plateau / Match</button></div>
   <button class="btn big ghost" data-act="multi">🗓️ Planifier plusieurs dates (ex : tous les mercredis)</button>`;
   if (!S.players.length) h += `<div class="hint">👋 Commence par ajouter tes joueurs dans l'onglet <b>Joueurs</b>.</div>`;
+  else if (S.players.some(p => !p.test) && (!S.settings.lastExport || (parse(TODAY) - parse(S.settings.lastExport)) / 864e5 >= 14))
+    h += `<div class="hint">💾 Pense à sauvegarder tes données (dernière : ${S.settings.lastExport ? fmtShort(S.settings.lastExport) : 'jamais'}). <button class="btn sm" data-act="export">Sauvegarder</button></div>`;
 
   if (view.selDay) {
     const evs = by[view.selDay] || [];
@@ -586,10 +588,11 @@ function composeView() {
 function playersView() {
   return `<button class="btn big mail" style="margin-top:0" data-act="compose" data-k="free">✉️ Message à tous les parents</button>
   <div class="card" style="margin-top:10px"><label>Ajouter des joueurs (un nom par ligne)<textarea id="newpl" rows="3" placeholder="Lucas Martin&#10;Inès Bernard&#10;..."></textarea></label><button class="btn big" data-act="addPl">Ajouter</button></div>
+  ${S.players.some(p => p.test) ? '' : `<button class="btn big ghost" data-act="addTest">🧪 Ajouter 5 joueurs d'essai (pour tester)</button>`}
   <h3>${S.players.length} joueur${S.players.length > 1 ? 's' : ''} · touche pour ajouter téléphone et mail</h3>`
     + S.players.map(p => {
       const np = phones(p).length, nm = mails(p).length;
-      return `<div class="card prow" data-act="editPl" data-id="${p.id}"><b>${esc(p.name)}</b><span>${np || nm ? `<span class="tag">📱 ${np}</span> <span class="tag">✉️ ${nm}</span>` : '<span class="miss">⚠️ pas de contact</span>'}${p.lic === false ? ' <span class="miss">⚠️ licence</span>' : ''} ›</span></div>`;
+      return `<div class="card prow" data-act="editPl" data-id="${p.id}"><b>${esc(p.name)}${p.test ? ' <span class="tag">essai</span>' : ''}</b><span>${np || nm ? `<span class="tag">📱 ${np}</span> <span class="tag">✉️ ${nm}</span>` : '<span class="miss">⚠️ pas de contact</span>'}${p.lic === false ? ' <span class="miss">⚠️ licence</span>' : ''} <button class="btn ghost red sm" style="padding:5px 9px;margin-left:4px" data-act="delPl" data-id="${p.id}" aria-label="Supprimer">🗑️</button></span></div>`;
     }).join('');
 }
 function editPlView() {
@@ -704,8 +707,9 @@ function settingsView() {
   </div>
   <h3>Sauvegarde</h3>
   <div class="card">
-    <p class="det" style="margin-top:0">Les données sont enregistrées dans le téléphone. Fais une sauvegarde de temps en temps (fichier à garder ou à s'envoyer par mail).</p>
-    <button class="btn big" data-act="export">⬇️ Exporter une sauvegarde</button>
+    <p class="det" style="margin-top:0">Tout est enregistré <b>automatiquement dans ce téléphone</b>, à chaque appui. Rien n'est envoyé sur internet.<br>La sauvegarde sert si tu changes de téléphone ou si Chrome est effacé : elle crée un petit fichier que tu t'envoies (WhatsApp « à moi-même », mail, Google Drive).</p>
+    <p class="det"><b>Dernière sauvegarde :</b> ${S.settings.lastExport ? cap(fmtDate(S.settings.lastExport)) : 'jamais'}</p>
+    <button class="btn big" data-act="export">💾 Sauvegarder maintenant</button>
     <label class="btn big ghost" style="color:var(--g)">⬆️ Importer une sauvegarde<input type="file" id="imp" accept=".json,application/json" style="display:none"></label>
     <button class="btn big ghost red" data-act="reset">Tout effacer</button>
   </div>`;
@@ -946,11 +950,28 @@ ${S.settings.sig || ''}`;
     view.editPl = null; view.playerId = null;
     save(); render();
   },
-  export: () => {
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(new Blob([JSON.stringify(S)], { type: 'application/json' }));
-    a.download = 'coach-foot-sauvegarde-' + TODAY + '.json';
-    a.click();
+  export: async () => {
+    const name = 'sauvegarde-coach-U6-' + TODAY + '.json';
+    const blob = new Blob([JSON.stringify(S)], { type: 'application/json' });
+    let shared = false;
+    try {
+      const file = new File([blob], name, { type: 'application/json' });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], title: 'Sauvegarde Coach U6' }); shared = true; }
+    } catch (e) { if (e && e.name === 'AbortError') return; }
+    if (!shared) { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; a.click(); }
+    S.settings.lastExport = TODAY; save(); render(); toast('Sauvegarde faite ✔');
+  },
+  addTest: () => {
+    ['Essai Léo', 'Essai Jade', 'Essai Tom', 'Essai Lina', 'Essai Sam'].forEach(name => S.players.push({ id: uid(), name, tel: '', tel2: '', mail: '', mail2: '', note: '', test: true }));
+    S.players.sort((a, b) => a.name.localeCompare(b.name, 'fr'));
+    save(); render(); toast('5 joueurs d\'essai ajoutés');
+  },
+  delTest: () => {
+    const ids = S.players.filter(p => p.test).map(p => p.id);
+    if (!confirm('Supprimer les ' + ids.length + ' joueurs d\'essai (et leurs présences) ?')) return;
+    S.players = S.players.filter(p => !p.test);
+    S.events.forEach(e => { ids.forEach(id => { delete e.presence[id]; if (e.rsvp) delete e.rsvp[id]; }); (e.teams || []).forEach(t => t.conv = t.conv.filter(x => !ids.includes(x))); });
+    save(); render(); toast('Joueurs d\'essai supprimés ✔');
   },
   reset: () => { if (confirm('Tout effacer ? (joueurs, séances, matchs) Cette action est définitive.')) { S = DEF(); save(); render(); } },
 };
