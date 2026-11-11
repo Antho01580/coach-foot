@@ -123,6 +123,12 @@ input:focus,textarea:focus{outline:2px solid var(--g);border-color:transparent}
 .hrow .bar2{flex:1;margin:0;height:10px;border-radius:5px}
 .hrow b{width:44px;text-align:right}
 .chip.on{background:var(--g);color:#fff;border-color:var(--g)}
+.rp{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #eef1ef;gap:6px}
+.rp.nc .nm{color:var(--o)}
+.rpb{display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end}
+.rpb button{border:1px solid var(--l);background:#fff;border-radius:9px;padding:7px 9px;font:inherit;font-size:13px;font-weight:600;color:var(--m);min-width:40px}
+.rpb button.on{background:var(--tc,var(--o));border-color:var(--tc,var(--o));color:#fff}
+summary{cursor:pointer;padding:6px 0}
 nav{position:fixed;bottom:0;left:0;right:0;background:#fff;display:flex;border-top:1px solid var(--l);padding-bottom:env(safe-area-inset-bottom);z-index:5}
 nav button{flex:1;border:0;background:none;padding:9px 0 10px;font:inherit;font-size:12px;color:var(--m);display:flex;flex-direction:column;align-items:center;gap:2px}
 nav button span{font-size:21px}
@@ -207,6 +213,7 @@ function msg(e, t) {
   m += '\n';
   if (t.rdv) m += `\n🕘 Rendez-vous ${hh(t.rdv)} sur place`;
   if (t.ko) m += `\n⏱️ Début ${hh(t.ko)}`;
+  if (t.edu) m += `\n👤 Éducateur : ${t.edu}`;
   if (S.settings.equip) m += `\n🎒 Avec ${S.settings.equip}`;
   if (t.lieu || t.adr) {
     m += `\n\n📍 L'adresse :${t.lieu ? '\n' + t.lieu : ''}${t.adr ? '\n' + t.adr : ''}`;
@@ -456,32 +463,58 @@ function presView(e) {
   h += `<button class="btn big wa" data-act="resp">📋 Envoyer la feuille de présence à ${esc(respName())}</button>`;
   return h;
 }
+const TC = ['#1d3fa6', '#e2463f', '#0f8a5f', '#8e44ad', '#e67e00', '#0e7490'];
+const tl = (t, i) => t.name || 'Équipe ' + (i + 1);
+function repartText(e) {
+  const owner = new Map(); e.teams.forEach(t => t.conv.forEach(id => owner.set(id, t)));
+  const nc = S.players.filter(p => !owner.has(p.id));
+  let r = `👥 RÉPARTITION – ${cap(kindOf(e))} ${quandRel(e.date)}\n${clubName()}`;
+  e.teams.forEach((t, i) => {
+    r += `\n\n${tl(t, i)} (${t.conv.length})${t.edu ? ' – éducateur : ' + t.edu : ''}${t.lieu ? '\n📍 ' + t.lieu : ''}${t.rdv ? ' – RDV ' + hh(t.rdv) : ''}\n`;
+    r += S.players.filter(p => t.conv.includes(p.id)).map((p, k) => (k + 1) + ' ' + p.name).join('\n') || '—';
+  });
+  r += `\n\n❌ Non convoqués (${nc.length}) :\n${nc.map(p => p.name).join('\n') || '—'}`;
+  if (S.settings.sig) r += `\n\n${S.settings.sig}`;
+  return r;
+}
 function convView(e) {
   if (!e.teams || !e.teams.length) e.teams = [newTeam()];
   const owner = new Map();
   e.teams.forEach(t => t.conv.forEach(id => owner.set(id, t)));
-  let h = e.teams.map((t, i) => `<div class="card">
-    <div class="th"><b>${e.teams.length > 1 ? 'Équipe ' + (i + 1) : 'Infos du match'}</b>${e.teams.length > 1 ? `<button class="btn ghost red sm" data-act="delTeam" data-id="${t.id}">Retirer</button>` : ''}</div>
-    <label>Nom de l'équipe<input data-f="t.${t.id}.name" value="${esc(t.name)}" placeholder="ex : U11 A"></label>
+  const nc = S.players.filter(p => !owner.has(p.id));
+  const one = e.teams.length === 1;
+  const short = (t, i) => one ? 'Convoqué' : (t.name ? (t.name.length > 9 ? t.name.slice(0, 8) + '…' : t.name) : 'Éq. ' + (i + 1));
+  let h = `<div class="card">
+    <div class="th"><b>👥 Répartition des joueurs</b><button class="btn sm" data-act="addTeam">+ Équipe</button></div>
+    <div class="chips">${e.teams.map((t, i) => `<span class="tag" style="background:${TC[i % 6]};color:#fff">${esc(tl(t, i))} : ${t.conv.length}${t.edu ? ' · ' + esc(t.edu) : ''}</span>`).join('')}<span class="tag" style="background:var(--o2);color:var(--o)">Non convoqués : ${nc.length}</span></div>
+    ${S.players.length ? '' : '<p class="det">Ajoute d\'abord tes joueurs (onglet Joueurs).</p>'}
+    <div style="margin-top:6px">${S.players.map(p => {
+      const o = owner.get(p.id);
+      return `<div class="rp ${o ? '' : 'nc'}"><span class="nm">${esc(p.name)}${p.lic === false ? ' <small class="miss">⚠️ licence</small>' : ''}</span><span class="rpb">${e.teams.map((t, i) => `<button data-act="assign" data-p="${p.id}" data-id="${t.id}" class="${o === t ? 'on' : ''}" style="--tc:${TC[i % 6]}">${esc(short(t, i))}</button>`).join('')}<button data-act="assign" data-p="${p.id}" data-id="" class="${o ? '' : 'on'}" title="Non convoqué">✕</button></span></div>`;
+    }).join('')}</div>
+    <details style="margin-top:12px"><summary><b>📋 Voir la liste complète</b></summary>
+      <textarea id="repart" rows="14" style="margin-top:8px">${esc(repartText(e))}</textarea>
+      <div class="row2" style="margin-top:8px"><button class="btn wa" data-act="repResp">📲 À ${esc(respName())}</button><button class="btn ghost" data-act="repCopy">Copier</button></div>
+    </details>
+  </div>`;
+  h += e.teams.map((t, i) => `<div class="card" style="border-top:5px solid ${TC[i % 6]}">
+    <div class="th"><b style="color:${TC[i % 6]}">${one ? 'Infos du ' + (t.kind || 'match') : esc(tl(t, i))}</b>${one ? '' : `<button class="btn ghost red sm" data-act="delTeam" data-id="${t.id}">Retirer l'équipe</button>`}</div>
+    <div class="row2"><label>Nom de l'équipe<input data-f="t.${t.id}.name" value="${esc(t.name)}" placeholder="ex : U6 A"></label><label>Éducateur(s)<input data-f="t.${t.id}.edu" value="${esc(t.edu || '')}" placeholder="ex : Karim"></label></div>
     <div class="seg">${['plateau', 'match', 'tournoi'].map(k => `<button data-act="kind" data-id="${t.id}" data-v="${k}" class="${(t.kind || 'match') === k ? 'on' : ''}">${cap(k)}</button>`).join('')}</div>
     <label>${(t.kind || 'match') === 'match' ? 'Adversaire' : 'Clubs présents (facultatif)'}<input data-f="t.${t.id}.adv" value="${esc(t.adv)}" placeholder="${(t.kind || 'match') === 'match' ? 'ex : FC Voisin' : 'ex : Creys-Mépieu, Morestel…'}"></label>
     ${(t.kind || 'match') !== 'match' ? '' : `<div class="seg"><button data-act="dom" data-id="${t.id}" data-v="dom" class="${t.dom !== 'ext' ? 'on' : ''}">🏠 Domicile</button><button data-act="dom" data-id="${t.id}" data-v="ext" class="${t.dom === 'ext' ? 'on' : ''}">🚌 Extérieur</button></div>`}
     <label>Lieu (stade)<input data-f="t.${t.id}.lieu" value="${esc(t.lieu)}" placeholder="ex : Stade de Bracon"></label>
     <label>Adresse<input data-f="t.${t.id}.adr" value="${esc(t.adr)}" placeholder="ex : Route de Bracon, 38510 Creys-Mépieu"></label>
     <div class="row2"><label>Rendez-vous<input type="time" data-f="t.${t.id}.rdv" value="${t.rdv}"></label><label>Début<input type="time" data-f="t.${t.id}.ko" value="${t.ko}"></label></div>
-    <div class="th"><b>Convoqués (${t.conv.length})</b><span><button class="btn ghost sm" data-act="convAll" data-id="${t.id}">Tous</button> <button class="btn ghost sm" data-act="convNone" data-id="${t.id}">Aucun</button></span></div>
-    ${S.players.length ? '' : '<p class="det">Ajoute d\'abord tes joueurs.</p>'}
-    <div class="chk">${S.players.map(p => {
-      const on = t.conv.includes(p.id), o = owner.get(p.id), other = o && o !== t;
-      return `<label class="ck ${on ? 'on' : ''}"><input type="checkbox" data-conv="${t.id}" data-p="${p.id}" ${on ? 'checked' : ''}><span>${esc(p.name)}${p.lic === false ? ' <small class="miss">⚠️ licence</small>' : ''}${other ? ` <small>(${esc(o.name || 'autre équipe')})</small>` : ''}</span></label>`;
-    }).join('')}</div>
+    <div class="th"><b>Convoqués (${t.conv.length})</b><span><button class="btn ghost sm" data-act="convAll" data-id="${t.id}">${one ? 'Tous' : '+ Non convoqués'}</button> <button class="btn ghost sm" data-act="convNone" data-id="${t.id}">Aucun</button></span></div>
+    <p class="det">${S.players.filter(p => t.conv.includes(p.id)).map(p => esc(p.name)).join(', ') || 'Choisis les joueurs dans la répartition ci-dessus.'}</p>
     <label>Message (modifiable avant envoi)<textarea id="msg-${t.id}" rows="14">${esc(msg(e, t))}</textarea></label>
     <button class="btn big mail" data-act="compose" data-k="conv" data-id="${t.id}">📤 Envoyer aux parents (SMS / mail)</button>
     <div class="row2" style="margin-top:8px"><button class="btn wa" data-act="wa" data-id="${t.id}">📲 Groupe parents</button><button class="btn ghost" data-act="copy" data-id="${t.id}">Copier</button></div>
-    <button class="btn big ghost red" data-act="convClear" data-id="${t.id}">🗑️ Effacer cette convocation</button>
     <button class="btn big ghost" data-act="convResp" data-id="${t.id}">📲 Envoyer la convocation à ${esc(respName())}</button>
+    <button class="btn big ghost red" data-act="convClear" data-id="${t.id}">🗑️ Effacer cette convocation</button>
   </div>`).join('');
-  return h + `<button class="btn big ghost" data-act="addTeam">+ Ajouter une équipe (autre lieu)</button>`;
+  return h + `<button class="btn big ghost" data-act="addTeam">+ Ajouter une équipe</button>`;
 }
 
 /* ---------- ENVOI DE MESSAGES ---------- */
@@ -689,7 +722,7 @@ function rapport(e) {
   let r = `📋 FEUILLE DE PRÉSENCE – ${clubName()}\n${e.type === 'match' ? '⚽ Match' : '🏃 Séance'} du ${cap(fmtDate(e.date))}`;
   if (e.type !== 'match') r += (e.time ? ` – ${hh(e.time)}${e.end ? '-' + hh(e.end) : ''}` : '') + (e.lieu ? `\n📍 ${e.lieu}` : '');
   else (e.teams || []).forEach(t => {
-    r += `\n${t.name ? t.name + ' ' : ''}vs ${t.adv || 'adversaire'}${t.lieu ? ' @ ' + t.lieu : ''}${hasScore(t) ? ` : ${t.bp}-${t.bc}` : ''}${t.buts ? ` (buts : ${t.buts})` : ''}`;
+    r += `\n${t.name ? t.name + ' ' : ''}${t.edu ? '(éduc : ' + t.edu + ') ' : ''}vs ${t.adv || 'adversaire'}${t.lieu ? ' @ ' + t.lieu : ''}${hasScore(t) ? ` : ${t.bp}-${t.bc}` : ''}${t.buts ? ` (buts : ${t.buts})` : ''}`;
   });
   r += `\n\n✅ Présents : ${P.length} / ${list.length}\n${lst(P)}\n\n❌ Absents : ${A.length}\n${lst(A)}\n\n🟠 Excusés : ${E.length}\n${lst(E)}`;
   if (N.length) r += `\n\n❔ Non pointés : ${N.join(', ')}`;
@@ -855,9 +888,12 @@ ${S.settings.sig || ''}`;
   restA: () => { const e = curEv(); roster(e).forEach(p => { if (!e.presence[p.id]) e.presence[p.id] = 'A'; }); save(); render(); },
   dom: (b, id) => { team(id).dom = b.dataset.v; save(); render(); },
   kind: (b, id) => { team(id).kind = b.dataset.v; save(); render(); },
-  convAll: (b, id) => { const e = curEv(); e.teams.forEach(t => { if (t.id !== id) t.conv = []; }); team(id).conv = S.players.map(p => p.id); save(); render(); },
+  convAll: (b, id) => { const e = curEv(); if (e.teams.length === 1) team(id).conv = S.players.map(p => p.id); else { const taken = new Set(e.teams.flatMap(t => t.conv)); S.players.forEach(p => { if (!taken.has(p.id)) team(id).conv.push(p.id); }); } save(); render(); },
   convNone: (b, id) => { team(id).conv = []; save(); render(); },
-  addTeam: () => { curEv().teams.push(newTeam()); save(); render(); },
+  addTeam: () => { const e = curEv(), f = e.teams[0] || {}; const t = newTeam(f.lieu || '', f.ko || ''); Object.assign(t, { kind: f.kind || 'plateau', adr: f.adr || '', rdv: f.rdv || '' }); e.teams.push(t); save(); render(); toast('Équipe ' + e.teams.length + ' ajoutée'); },
+  assign: b => { const e = curEv(), pid = b.dataset.p, id = b.dataset.id; e.teams.forEach(t => t.conv = t.conv.filter(x => x !== pid)); if (id) team(id).conv.push(pid); save(); render(); },
+  repCopy: () => copy(document.getElementById('repart').value),
+  repResp: () => { const t = S.settings.respTel; if (!t) { alert('Ajoute le numéro de ' + respName() + ' dans Réglages → Responsable.'); return; } window.open('https://wa.me/' + intl(t) + '?text=' + encodeURIComponent(document.getElementById('repart').value), '_blank'); },
   delTeam: (b, id) => { if (confirm('Retirer cette équipe ?')) { const e = curEv(); e.teams = e.teams.filter(t => t.id !== id); save(); render(); } },
   wa: (b, id) => waParents(document.getElementById('msg-' + id).value),
   copy: (b, id) => copy(document.getElementById('msg-' + id).value),
