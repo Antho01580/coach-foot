@@ -60,7 +60,7 @@ input:focus,textarea:focus{outline:2px solid var(--g);border-color:transparent}
 .ck.on{background:var(--g2);border-color:var(--g)}
 .ck small{color:var(--m)}
 .hint{background:var(--o2);border-radius:12px;padding:12px;margin:10px 0;font-size:14px}
-.info{background:var(--b2);border-radius:12px;padding:12px;margin:10px 0;font-size:14px}
+.info{background:var(--g2);border-radius:12px;padding:12px;margin:10px 0;font-size:14px}
 .empty{text-align:center;color:var(--m);padding:30px 0}
 .prow{display:flex;justify-content:space-between;align-items:center;cursor:pointer}
 .st{display:flex;align-items:center;justify-content:space-between;cursor:pointer}
@@ -578,10 +578,20 @@ function convView(e) {
   <div class="card">
     <div class="th"><b>👥 Joueurs</b><span><button class="btn ghost sm" data-act="convAll" data-id="${t.id}">Tous</button> <button class="btn ghost sm" data-act="convNone" data-id="${t.id}">Aucun</button></span></div>
     <div class="chips"><span class="tag" style="background:var(--ok2);color:var(--ok)">✅ Convoqués : ${yes.length}</span><span class="tag" style="background:var(--o2);color:var(--o)">❌ Non convoqués : ${no.length}</span></div>
+    ${(() => { const r = e.rsvp || {}; const Y = yes.filter(p => r[p.id] === 'Y').length, N = yes.filter(p => r[p.id] === 'N').length, Q = yes.length - Y - N;
+      const extra = S.players.filter(p => r[p.id] === 'Y' && !t.conv.includes(p.id));
+      return `<div class="info" style="margin-bottom:4px"><b>Réponses des parents</b> (convoqués) : <span class="p">👍 ${Y} présent${Y > 1 ? 's' : ''}</span> · <span class="a">👎 ${N} absent${N > 1 ? 's' : ''}</span> · <span class="n">❔ ${Q} sans réponse</span><br><small>Touche 👍 ou 👎 à côté d'un enfant quand un parent répond (dans le groupe ou en privé). Les réponses du <b>Sondage</b> s'affichent ici aussi.</small>
+        ${N ? `<div style="margin-top:6px"><b class="a">Absents annoncés :</b> ${yes.filter(p => r[p.id] === 'N').map(p => esc(p.name)).join(', ')}</div>` : ''}
+        ${Q && yes.length ? `<button class="btn mail sm" style="margin-top:8px" data-act="relanceConv">🔔 Relancer les ${Q} sans réponse</button>` : ''}
+        ${extra.length ? `<button class="btn sm" style="margin-top:8px" data-act="convYes" data-id="${t.id}">📣 Convoquer les ${extra.length} « oui » du sondage</button>` : ''}</div>`; })()}
     ${S.players.length ? '' : '<p class="det">Ajoute d\'abord tes joueurs (onglet Joueurs).</p>'}
     <div style="margin-top:6px">${S.players.map(p => {
       const on = t.conv.includes(p.id);
-      return `<div class="rp ${on ? '' : 'nc'}"><span class="nm">${esc(p.name)}${p.lic === false ? ' <small class="miss">⚠️ licence</small>' : ''}</span><span class="rpb"><button data-act="assign" data-p="${p.id}" data-id="${on ? '' : t.id}" class="${on ? 'on' : ''}" style="--tc:var(--ok);min-width:120px">${on ? '✅ Convoqué' : 'Pas convoqué'}</button></span></div>`;
+      const rv = (e.rsvp || {})[p.id] || '';
+      return `<div class="rp ${on ? '' : 'nc'}"><span class="nm" style="${rv === 'N' ? 'color:var(--r);text-decoration:line-through' : ''}">${esc(p.name)}${p.lic === false ? ' <small class="miss">⚠️ licence</small>' : ''}</span><span class="rpb">
+        <button data-act="rsvp" data-id="${p.id}" data-s="Y" class="${rv === 'Y' ? 'on' : ''}" style="--tc:var(--ok);min-width:38px" title="A répondu présent">👍</button>
+        <button data-act="rsvp" data-id="${p.id}" data-s="N" class="${rv === 'N' ? 'on' : ''}" style="--tc:var(--r);min-width:38px" title="A répondu absent">👎</button>
+        <button data-act="assign" data-p="${p.id}" data-id="${on ? '' : t.id}" class="${on ? 'on' : ''}" style="--tc:var(--g);min-width:96px">${on ? '✅ Convoqué' : 'Pas convoqué'}</button></span></div>`;
     }).join('')}</div>
     ${no.length && yes.length ? `<p class="det" style="margin-top:10px"><b>Non convoqués :</b> ${no.map(p => esc(p.name)).join(', ')}</p>` : ''}
     <details style="margin-top:8px"><summary><b>📋 Liste convoqués / non convoqués</b></summary>
@@ -894,6 +904,15 @@ function createEvent(type, date, time = '', end = '', lieu = '') {
 }
 
 const ACT = {
+  relanceConv: () => {
+    const e = curEv(), t = e.teams[0], r = e.rsvp || {};
+    openCompose('free');
+    view.compose.sel = t.conv.filter(id => !r[id]);
+    view.compose.text = `Bonjour,\n\nPetit rappel pour le ${kindOf(e)} ${quandRel(e.date)} : merci de me confirmer si {nom} sera présent(e) 🙂\n\n${S.settings.sig || ''}`;
+    view.compose.subject = 'Rappel – ' + cap(kindOf(e)) + ' ' + fmtShort(e.date);
+    render();
+  },
+  convYes: (b, id) => { const e = curEv(), r = e.rsvp || {}, t = team(id); S.players.forEach(p => { if (r[p.id] === 'Y' && !t.conv.includes(p.id)) t.conv.push(p.id); }); save(); render(); toast('Les « oui » sont convoqués ✔'); },
   rsvp: (b, id) => { const e = curEv(); e.rsvp = e.rsvp || {}; const s = b.dataset.s; if (e.rsvp[id] === s) delete e.rsvp[id]; else e.rsvp[id] = s; save(); render(); },
   pollSend: () => waParents(document.getElementById('pollMsg').value),
   pollCopyQ: () => copy(pollQ(curEv())),
