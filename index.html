@@ -104,6 +104,7 @@ input:focus,textarea:focus{outline:2px solid var(--g);border-color:transparent}
 /* compte rendu + stats */
 .mic{background:var(--r);width:100%;padding:16px;font-size:17px;margin-top:10px}
 .mic.rec{animation:pulse 1.2s infinite}
+.live{background:var(--r2);color:var(--r);border-radius:10px;padding:10px 12px;margin-top:8px;font-size:15px;font-weight:600;min-height:42px}
 @keyframes pulse{50%{opacity:.6}}
 .score{display:grid;grid-template-columns:1fr 64px 16px 64px;gap:6px;align-items:center;margin-top:10px}
 .score input{text-align:center;font-size:20px;font-weight:700;margin:0;padding:10px 4px}
@@ -210,7 +211,7 @@ function quandRel(d) {
 function msg(e, t) {
   const kind = t.kind || 'match';
   const players = S.players.filter(p => t.conv.includes(p.id));
-  let m = `Bonjour à tous,\n\nPour le ${kind}${t.name ? ' (' + t.name + ')' : ''} ${quandRel(e.date)} ⚽`;
+  let m = `Bonjour à tous,\n\nPour le ${kind} ${quandRel(e.date)} ⚽`;
   if (t.adv) m += `\n${kind === 'match' ? '🆚 Contre' : '🆚 Avec'} ${t.adv}${kind === 'match' ? (t.dom === 'ext' ? ' (à l\'extérieur)' : ' (à domicile)') : ''}`;
   m += '\n';
   if (t.rdv) m += `\n🕘 Rendez-vous ${hh(t.rdv)} sur place`;
@@ -394,8 +395,12 @@ function crView(e) {
     <label>Buteurs (facultatif)<input data-f="t.${t.id}.buts" value="${esc(t.buts || '')}" placeholder="ex : Lucas x2, Inès"></label>`).join('<hr style="border:0;border-top:1px solid #eef1ef;margin:12px 0">')}</div>`;
   h += `<div class="card">
     <div class="th"><b>📝 Compte rendu</b><button class="btn ghost sm" data-act="crPlan">Plan type</button></div>
-    <button class="btn mic ${rec ? 'rec' : ''}" id="micBtn" data-act="dictee">${rec ? '⏹️ Arrêter la dictée' : '🎤 Dicter à la voix'}</button>
-    <p class="det">Parle normalement. Dis « <b>à la ligne</b> » pour un retour à la ligne, « <b>virgule</b> », « <b>point</b> ». Tu peux corriger au clavier ensuite.</p>
+    <button class="btn mic ${dictOn ? 'rec' : ''}" id="micBtn" data-act="dictee">${dictOn ? '⏹️ Arrêter la dictée' : '🎤 Dicter à la voix'}</button>
+    <div id="live" class="live" style="display:${dictOn ? 'block' : 'none'}">🎙️ J'écoute…</div>
+    <details class="det" style="margin-top:6px"><summary>🗣️ Mots pour la ponctuation</summary>
+      « <b>point</b> » · « <b>virgule</b> » · « <b>à la ligne</b> » · « <b>nouveau paragraphe</b> » · « <b>point d'interrogation</b> » · « <b>point d'exclamation</b> » · « <b>deux points</b> » · « <b>tiret</b> » (liste)<br>
+      Les majuscules se mettent toutes seules. Parle à ton rythme : le micro reste allumé jusqu'à ce que tu appuies sur Arrêter, même si tu fais des pauses.</details>
+    <button class="btn ghost sm" style="margin-top:8px" data-act="undoDictee">↩️ Annuler la dernière dictée</button>
     <textarea id="cr" data-f="ev.cr" rows="12" placeholder="Ce qui a été travaillé, points positifs, à améliorer, joueurs à féliciter…">${esc(e.cr || '')}</textarea>
     <button class="btn big mail" data-act="compose" data-k="cr">📤 Envoyer le compte rendu aux parents</button>
     <button class="btn big ghost" data-act="copyCr">Copier le compte rendu</button>
@@ -435,39 +440,95 @@ function pollView(e) {
 }
 
 /* ---------- DICTÉE ---------- */
-let rec = null;
+let rec = null, dictOn = false, wake = null, sessBase = '', hist = [];
+const CMDS = [
+  ['point à la ligne', '.\n'], ['nouveau paragraphe', '\n\n'], ['retour à la ligne', '\n'], ['à la ligne', '\n'], ['nouvelle ligne', '\n'],
+  ["point d'interrogation", ' ?'], ["point d'exclamation", ' !'], ['points de suspension', '…'], ['point de suspension', '…'],
+  ['point-virgule', ' ;'], ['point virgule', ' ;'], ['deux points', ' :'], ['virgule', ','], ['tiret', '\n- '], ['point', '.'],
+];
 function ponctue(t) {
-  return t.replace(/\s*(point à la ligne)\s*/gi, '.\n').replace(/\s*(à la ligne|nouvelle ligne)\s*/gi, '\n')
-    .replace(/\s*virgule\s*/gi, ', ').replace(/\s*point d'interrogation\s*/gi, ' ? ').replace(/\s*point d'exclamation\s*/gi, ' ! ')
-    .replace(/\s*\bpoint\b\s*$/gi, '. ').replace(/\s+\bpoint\b\s+/gi, '. ');
+  let x = ' ' + t.trim() + ' ';
+  CMDS.forEach(([w, v]) => { x = x.replace(new RegExp('(^|\\s)' + w.replace(/[-']/g, m => '[' + m + "’ ]") + '(?=\\s|$)', 'gi'), v + ' '); });
+  return x.replace(/[ \t]+([,.…])/g, '$1').replace(/[ \t]+\n/g, '\n').replace(/\n[ \t]+/g, '\n').replace(/[ \t]{2,}/g, ' ').replace(/^[ \t]+/, '').replace(/[ \t]+$/, '');
 }
-function dictee() {
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SR) { alert('La dictée n\'est pas disponible dans ce navigateur. Ouvre l\'appli avec Chrome, ou utilise le micro 🎤 du clavier.'); return; }
-  if (rec) { rec.stop(); return; }
-  const e = curEv();
-  let base = e.cr ? e.cr.replace(/\s*$/, e.cr.endsWith('\n') ? '' : ' ') : '';
-  rec = new SR();
-  rec.lang = 'fr-FR'; rec.continuous = true; rec.interimResults = true;
-  rec.onresult = ev => {
-    let interim = '';
-    for (let i = ev.resultIndex; i < ev.results.length; i++) {
-      const r = ev.results[i];
-      if (r.isFinal) {
-        let t = ponctue(r[0].transcript.trim());
-        if (!base || /[.!?\n]\s*$/.test(base)) t = t.charAt(0).toUpperCase() + t.slice(1);
-        base += t + (t.endsWith('\n') ? '' : ' ');
-      } else interim += r[0].transcript;
-    }
-    e.cr = base; save();
-    const ta = document.getElementById('cr');
-    if (ta) { ta.value = base + interim; ta.scrollTop = ta.scrollHeight; }
-  };
-  rec.onerror = ev => { if (ev.error === 'not-allowed') alert('Autorise le micro pour Chrome dans les réglages du téléphone.'); };
-  rec.onend = () => { rec = null; const b = document.getElementById('micBtn'); if (b) { b.classList.remove('rec'); b.textContent = '🎤 Dicter à la voix'; } };
-  rec.start();
+function joinTxt(base, t) {
+  let x = ponctue(t || '');
+  if (!x) return base;
+  if (!base.trim() || /[.!?…]\s*$|\n\s*$/.test(base)) x = x.charAt(0).toUpperCase() + x.slice(1);
+  x = x.replace(/([.!?…][ \t]+|\n-?[ \t]*)([a-zàâçéèêëîïôûùüÿœ])/g, (m, a, b) => a + b.toUpperCase());
+  const sep = !base || /\s$/.test(base) || /^[,.;:!?…\n]/.test(x) ? '' : ' ';
+  return base + sep + x;
+}
+// Chrome Android renvoie parfois les phrases en double ou cumulées : on les fusionne proprement
+function mergeFinals(results) {
+  let acc = '', interim = '';
+  for (let i = 0; i < results.length; i++) {
+    const r = results[i], tx = r[0].transcript.trim();
+    if (!tx) continue;
+    if (!r.isFinal) { interim += ' ' + tx; continue; }
+    const a = acc.toLowerCase(), t = tx.toLowerCase();
+    if (a && t.startsWith(a)) acc = tx;
+    else if (!a.endsWith(t)) acc = (acc + ' ' + tx).trim();
+  }
+  return { acc, interim: interim.trim() };
+}
+function dictUI(on) {
   const b = document.getElementById('micBtn');
-  if (b) { b.classList.add('rec'); b.textContent = '⏹️ Arrêter la dictée'; }
+  if (b) { b.classList.toggle('rec', on); b.textContent = on ? '⏹️ Arrêter la dictée' : '🎤 Dicter à la voix'; }
+  const li = document.getElementById('live');
+  if (li) { li.style.display = on ? 'block' : 'none'; li.textContent = '🎙️ J\'écoute… parle normalement'; }
+}
+function startRec() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const e = curEv();
+  if (!e || !dictOn) { dictOn = false; dictUI(false); return; }
+  sessBase = e.cr || '';
+  if (hist[hist.length - 1] !== sessBase) { hist.push(sessBase); if (hist.length > 40) hist.shift(); }
+  const r = new SR();
+  r.lang = 'fr-FR'; r.continuous = true; r.interimResults = true; r.maxAlternatives = 1;
+  r.onresult = ev => {
+    const { acc, interim } = mergeFinals(ev.results);
+    e.cr = joinTxt(sessBase, acc); save();
+    const ta = document.getElementById('cr');
+    if (ta) { ta.value = e.cr; ta.scrollTop = ta.scrollHeight; }
+    const li = document.getElementById('live');
+    if (li) li.textContent = interim ? '🎙️ ' + interim : '🎙️ J\'écoute…';
+  };
+  r.onerror = ev => {
+    const msgs = { 'not-allowed': 'Autorise le micro : Paramètres du téléphone → Applications → Chrome → Autorisations → Micro.', 'service-not-allowed': 'Autorise le micro : Paramètres du téléphone → Applications → Chrome → Autorisations → Micro.', 'network': 'La dictée a besoin d\'internet (4G ou wifi).', 'audio-capture': 'Micro introuvable ou déjà utilisé par une autre appli.' };
+    if (msgs[ev.error]) { dictOn = false; alert(msgs[ev.error]); }
+  };
+  r.onend = () => {
+    rec = null;
+    const e2 = curEv(); if (e2) sessBase = e2.cr || '';
+    if (dictOn) setTimeout(() => { if (dictOn && !rec) { try { startRec(); } catch (x) { dictOn = false; dictUI(false); } } }, 200);
+    else dictUI(false);
+  };
+  rec = r;
+  r.start();
+}
+async function dictee() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) { alert('La dictée n\'est pas disponible ici. Ouvre l\'appli avec Chrome, ou utilise le micro 🎤 du clavier.'); return; }
+  if (dictOn) { stopDictee(); return; }
+  dictOn = true;
+  try { if (navigator.wakeLock) wake = await navigator.wakeLock.request('screen'); } catch (x) {}
+  if (navigator.vibrate) navigator.vibrate(40);
+  dictUI(true);
+  startRec();
+}
+function stopDictee() {
+  dictOn = false;
+  if (rec) { try { rec.stop(); } catch (x) {} } else dictUI(false);
+  if (wake) { wake.release().catch(() => {}); wake = null; }
+  if (navigator.vibrate) navigator.vibrate([30, 40, 30]);
+}
+function undoDictee() {
+  const e = curEv(); if (!e) return;
+  if (dictOn) stopDictee();
+  while (hist.length && hist[hist.length - 1] === (e.cr || '')) hist.pop();
+  if (!hist.length) { toast('Rien à annuler'); return; }
+  e.cr = hist.pop(); save(); render(); toast('Dernière dictée annulée');
 }
 function presView(e) {
   if (!S.players.length) return '<p class="empty">Ajoute d\'abord tes joueurs (onglet Joueurs).</p>';
@@ -488,58 +549,53 @@ function presView(e) {
   h += `<button class="btn big wa" data-act="resp">📋 Envoyer la feuille de présence à ${esc(respName())}</button>`;
   return h;
 }
-const TC = ['#1d3fa6', '#e2463f', '#0f8a5f', '#8e44ad', '#e67e00', '#0e7490'];
-const tl = (t, i) => t.name || 'Équipe ' + (i + 1);
+const TC = ['#1d3fa6'];
+const tl = (t) => t.name || clubName();
 function repartText(e) {
-  const owner = new Map(); e.teams.forEach(t => t.conv.forEach(id => owner.set(id, t)));
-  const nc = S.players.filter(p => !owner.has(p.id));
-  let r = `👥 RÉPARTITION – ${cap(kindOf(e))} ${quandRel(e.date)}\n${clubName()}`;
-  e.teams.forEach((t, i) => {
-    r += `\n\n${tl(t, i)} (${t.conv.length})${t.edu ? ' – éducateur : ' + t.edu : ''}${t.lieu ? '\n📍 ' + t.lieu : ''}${t.rdv ? ' – RDV ' + hh(t.rdv) : ''}\n`;
-    r += S.players.filter(p => t.conv.includes(p.id)).map((p, k) => (k + 1) + ' ' + p.name).join('\n') || '—';
-  });
-  r += `\n\n❌ Non convoqués (${nc.length}) :\n${nc.map(p => p.name).join('\n') || '—'}`;
+  const t = e.teams[0];
+  const yes = S.players.filter(p => t.conv.includes(p.id)), no = S.players.filter(p => !t.conv.includes(p.id));
+  let r = `👥 CONVOCATION – ${cap(kindOf(e))} ${quandRel(e.date)}\n${clubName()}${t.edu ? '\nÉducateur : ' + t.edu : ''}${t.lieu ? '\n📍 ' + t.lieu : ''}${t.rdv ? ' – RDV ' + hh(t.rdv) : ''}`;
+  r += `\n\n✅ Convoqués (${yes.length}) :\n${yes.map((p, k) => (k + 1) + ' ' + p.name).join('\n') || '—'}`;
+  r += `\n\n❌ Non convoqués (${no.length}) :\n${no.map(p => p.name).join('\n') || '—'}`;
   if (S.settings.sig) r += `\n\n${S.settings.sig}`;
   return r;
 }
 function convView(e) {
   if (!e.teams || !e.teams.length) e.teams = [newTeam()];
-  const owner = new Map();
-  e.teams.forEach(t => t.conv.forEach(id => owner.set(id, t)));
-  const nc = S.players.filter(p => !owner.has(p.id));
-  const one = e.teams.length === 1;
-  const short = (t, i) => one ? 'Convoqué' : (t.name ? (t.name.length > 9 ? t.name.slice(0, 8) + '…' : t.name) : 'Éq. ' + (i + 1));
-  let h = `<div class="card">
-    <div class="th"><b>👥 Répartition des joueurs</b><button class="btn sm" data-act="addTeam">+ Équipe</button></div>
-    <div class="chips">${e.teams.map((t, i) => `<span class="tag" style="background:${TC[i % 6]};color:#fff">${esc(tl(t, i))} : ${t.conv.length}${t.edu ? ' · ' + esc(t.edu) : ''}</span>`).join('')}<span class="tag" style="background:var(--o2);color:var(--o)">Non convoqués : ${nc.length}</span></div>
-    ${S.players.length ? '' : '<p class="det">Ajoute d\'abord tes joueurs (onglet Joueurs).</p>'}
-    <div style="margin-top:6px">${S.players.map(p => {
-      const o = owner.get(p.id);
-      return `<div class="rp ${o ? '' : 'nc'}"><span class="nm">${esc(p.name)}${p.lic === false ? ' <small class="miss">⚠️ licence</small>' : ''}</span><span class="rpb">${e.teams.map((t, i) => `<button data-act="assign" data-p="${p.id}" data-id="${t.id}" class="${o === t ? 'on' : ''}" style="--tc:${TC[i % 6]}">${esc(short(t, i))}</button>`).join('')}<button data-act="assign" data-p="${p.id}" data-id="" class="${o ? '' : 'on'}" title="Non convoqué">✕</button></span></div>`;
-    }).join('')}</div>
-    <details style="margin-top:12px"><summary><b>📋 Voir la liste complète</b></summary>
-      <textarea id="repart" rows="14" style="margin-top:8px">${esc(repartText(e))}</textarea>
-      <div class="row2" style="margin-top:8px"><button class="btn wa" data-act="repResp">📲 À ${esc(respName())}</button><button class="btn ghost" data-act="repCopy">Copier</button></div>
-    </details>
-  </div>`;
-  h += e.teams.map((t, i) => `<div class="card" style="border-top:5px solid ${TC[i % 6]}">
-    <div class="th"><b style="color:${TC[i % 6]}">${one ? 'Infos du ' + (t.kind || 'match') : esc(tl(t, i))}</b>${one ? '' : `<button class="btn ghost red sm" data-act="delTeam" data-id="${t.id}">Retirer l'équipe</button>`}</div>
-    <div class="row2"><label>Nom de l'équipe<input data-f="t.${t.id}.name" value="${esc(t.name)}" placeholder="ex : U6 A"></label><label>Éducateur(s)<input data-f="t.${t.id}.edu" value="${esc(t.edu || '')}" placeholder="ex : Karim"></label></div>
-    <div class="seg">${['plateau', 'match', 'tournoi'].map(k => `<button data-act="kind" data-id="${t.id}" data-v="${k}" class="${(t.kind || 'match') === k ? 'on' : ''}">${cap(k)}</button>`).join('')}</div>
-    <label>${(t.kind || 'match') === 'match' ? 'Adversaire' : 'Clubs présents (facultatif)'}<input data-f="t.${t.id}.adv" value="${esc(t.adv)}" placeholder="${(t.kind || 'match') === 'match' ? 'ex : FC Voisin' : 'ex : Creys-Mépieu, Morestel…'}"></label>
-    ${(t.kind || 'match') !== 'match' ? '' : `<div class="seg"><button data-act="dom" data-id="${t.id}" data-v="dom" class="${t.dom !== 'ext' ? 'on' : ''}">🏠 Domicile</button><button data-act="dom" data-id="${t.id}" data-v="ext" class="${t.dom === 'ext' ? 'on' : ''}">🚌 Extérieur</button></div>`}
+  const t = e.teams[0];
+  const yes = S.players.filter(p => t.conv.includes(p.id)), no = S.players.filter(p => !t.conv.includes(p.id));
+  const k = t.kind || 'match';
+  return `<div class="card">
+    <b>📍 Infos du ${k}</b>
+    <div class="seg">${['plateau', 'match', 'tournoi'].map(x => `<button data-act="kind" data-id="${t.id}" data-v="${x}" class="${k === x ? 'on' : ''}">${cap(x)}</button>`).join('')}</div>
+    <label>${k === 'match' ? 'Adversaire' : 'Clubs présents (facultatif)'}<input data-f="t.${t.id}.adv" value="${esc(t.adv)}" placeholder="${k === 'match' ? 'ex : FC Voisin' : 'ex : Creys-Mépieu, Morestel…'}"></label>
+    ${k !== 'match' ? '' : `<div class="seg"><button data-act="dom" data-id="${t.id}" data-v="dom" class="${t.dom !== 'ext' ? 'on' : ''}">🏠 Domicile</button><button data-act="dom" data-id="${t.id}" data-v="ext" class="${t.dom === 'ext' ? 'on' : ''}">🚌 Extérieur</button></div>`}
     <label>Lieu (stade)<input data-f="t.${t.id}.lieu" value="${esc(t.lieu)}" placeholder="ex : Stade de Bracon"></label>
     <label>Adresse<input data-f="t.${t.id}.adr" value="${esc(t.adr)}" placeholder="ex : Route de Bracon, 38510 Creys-Mépieu"></label>
     <div class="row2"><label>Rendez-vous<input type="time" data-f="t.${t.id}.rdv" value="${t.rdv}"></label><label>Début<input type="time" data-f="t.${t.id}.ko" value="${t.ko}"></label></div>
-    <div class="th"><b>Convoqués (${t.conv.length})</b><span><button class="btn ghost sm" data-act="convAll" data-id="${t.id}">${one ? 'Tous' : '+ Non convoqués'}</button> <button class="btn ghost sm" data-act="convNone" data-id="${t.id}">Aucun</button></span></div>
-    <p class="det">${S.players.filter(p => t.conv.includes(p.id)).map(p => esc(p.name)).join(', ') || 'Choisis les joueurs dans la répartition ci-dessus.'}</p>
-    <label>Message (modifiable avant envoi)<textarea id="msg-${t.id}" rows="14">${esc(msg(e, t))}</textarea></label>
-    <button class="btn big mail" data-act="compose" data-k="conv" data-id="${t.id}">📤 Envoyer aux parents (SMS / mail)</button>
-    <div class="row2" style="margin-top:8px"><button class="btn wa" data-act="wa" data-id="${t.id}">📲 Groupe parents</button><button class="btn ghost" data-act="copy" data-id="${t.id}">Copier</button></div>
+    <label>Éducateur(s)<input data-f="t.${t.id}.edu" value="${esc(t.edu || '')}" placeholder="ex : Karim"></label>
+  </div>
+  <div class="card">
+    <div class="th"><b>👥 Joueurs</b><span><button class="btn ghost sm" data-act="convAll" data-id="${t.id}">Tous</button> <button class="btn ghost sm" data-act="convNone" data-id="${t.id}">Aucun</button></span></div>
+    <div class="chips"><span class="tag" style="background:var(--ok2);color:var(--ok)">✅ Convoqués : ${yes.length}</span><span class="tag" style="background:var(--o2);color:var(--o)">❌ Non convoqués : ${no.length}</span></div>
+    ${S.players.length ? '' : '<p class="det">Ajoute d\'abord tes joueurs (onglet Joueurs).</p>'}
+    <div style="margin-top:6px">${S.players.map(p => {
+      const on = t.conv.includes(p.id);
+      return `<div class="rp ${on ? '' : 'nc'}"><span class="nm">${esc(p.name)}${p.lic === false ? ' <small class="miss">⚠️ licence</small>' : ''}</span><span class="rpb"><button data-act="assign" data-p="${p.id}" data-id="${on ? '' : t.id}" class="${on ? 'on' : ''}" style="--tc:var(--ok);min-width:120px">${on ? '✅ Convoqué' : 'Pas convoqué'}</button></span></div>`;
+    }).join('')}</div>
+    ${no.length && yes.length ? `<p class="det" style="margin-top:10px"><b>Non convoqués :</b> ${no.map(p => esc(p.name)).join(', ')}</p>` : ''}
+    <details style="margin-top:8px"><summary><b>📋 Liste convoqués / non convoqués</b></summary>
+      <textarea id="repart" rows="14" style="margin-top:8px">${esc(repartText(e))}</textarea>
+      <div class="row2" style="margin-top:8px"><button class="btn wa" data-act="repResp">📲 À ${esc(respName())}</button><button class="btn ghost" data-act="repCopy">Copier</button></div>
+    </details>
+  </div>
+  <div class="card">
+    <label style="margin-top:0">Message de convocation (modifiable avant envoi)<textarea id="msg-${t.id}" rows="16">${esc(msg(e, t))}</textarea></label>
+    <button class="btn big wa" data-act="wa" data-id="${t.id}">📲 Envoyer au groupe parents</button>
+    <div class="row2" style="margin-top:8px"><button class="btn mail" data-act="compose" data-k="conv" data-id="${t.id}">📤 SMS / mail</button><button class="btn ghost" data-act="copy" data-id="${t.id}">Copier</button></div>
     <button class="btn big ghost" data-act="convResp" data-id="${t.id}">📲 Envoyer la convocation à ${esc(respName())}</button>
     <button class="btn big ghost red" data-act="convClear" data-id="${t.id}">🗑️ Effacer cette convocation</button>
-  </div>`).join('');
-  return h + `<button class="btn big ghost" data-act="addTeam">+ Ajouter une équipe</button>`;
+  </div>`;
 }
 
 /* ---------- ENVOI DE MESSAGES ---------- */
@@ -858,6 +914,7 @@ ${S.settings.sig || ''}`;
   pollPres: () => { const e = curEv(), r = e.rsvp || {}; S.players.forEach(p => { if (!e.presence[p.id]) { if (r[p.id] === 'N') e.presence[p.id] = 'E'; } }); save(); view.sub = 'presence'; render(); toast('Les « non » sont notés excusés'); },
   statSub: b => { view.statSub = b.dataset.v; render(); },
   dictee: () => dictee(),
+  undoDictee: () => undoDictee(),
   crPlan: () => {
     const e = curEv();
     const plan = `✅ Points positifs :\n\n🔧 À travailler :\n\n⭐ Joueurs à féliciter :\n\n📌 Prochaine fois :\n`;
@@ -1014,7 +1071,7 @@ ${S.settings.sig || ''}`;
 document.addEventListener('click', ev => {
   const b = ev.target.closest('[data-act]');
   if (!b || b.disabled) return;
-  if (rec && ['tab', 'back', 'sub', 'compose', 'delEv'].includes(b.dataset.act)) rec.stop();
+  if (dictOn && ['tab', 'back', 'sub', 'compose', 'delEv', 'resp'].includes(b.dataset.act)) stopDictee();
   ACT[b.dataset.act] && ACT[b.dataset.act](b, b.dataset.id);
 });
 document.addEventListener('input', ev => {
@@ -1024,6 +1081,7 @@ document.addEventListener('input', ev => {
   if (k === 'resp') { view.resp[a] = v; document.getElementById('rapport').value = bilan(); return; }
   if (k === 'ev' && view.resp) { const e = S.events.find(x => x.id === view.resp.eventId); e[a] = v; save(); document.getElementById('rapport').value = rapport(e); return; }
   if (k === 'ev' && (a === 'pollQ' || a === 'pollLim')) { const e = curEv(); e[a] = v; save(); const m = document.getElementById('pollMsg'); if (m) m.value = pollMsg(e); return; }
+  if (k === 'ev' && a === 'cr' && dictOn) stopDictee();
   if (k === 'ev') { const e = curEv(); e[a] = v; (e.teams || []).forEach(t => { const m = document.getElementById('msg-' + t.id); if (m) m.value = msg(e, t); }); }
   else if (k === 't') { const t = team(a); t[b] = v; const m = document.getElementById('msg-' + t.id); if (m) m.value = msg(curEv(), t); }
   else if (k === 'pl') { player(a)[b] = v; if (b === 'name') S.players.sort((x, y) => x.name.localeCompare(y.name, 'fr')); }
