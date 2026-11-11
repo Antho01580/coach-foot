@@ -962,7 +962,8 @@ ${S.settings.sig || ''}`;
     S.settings.lastExport = TODAY; save(); render(); toast('Sauvegarde faite ✔');
   },
   addTest: () => {
-    ['Essai Léo', 'Essai Jade', 'Essai Tom', 'Essai Lina', 'Essai Sam'].forEach(name => S.players.push({ id: uid(), name, tel: '', tel2: '', mail: '', mail2: '', note: '', test: true }));
+    // numéros réservés à la fiction par l'ARCEP (06 39 98 xx xx) et adresses example.com : n'atteignent personne
+    ['Léo', 'Jade', 'Tom', 'Lina', 'Sam'].forEach((n, i) => S.players.push({ id: uid(), name: 'Essai ' + n, tel: '06 39 98 00 0' + (i + 1), tel2: i % 2 ? '' : '06 39 98 00 1' + (i + 1), mail: 'parent.' + n.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase() + '@example.com', mail2: '', note: 'Joueur d’essai', test: true }));
     S.players.sort((a, b) => a.name.localeCompare(b.name, 'fr'));
     save(); render(); toast('5 joueurs d\'essai ajoutés');
   },
