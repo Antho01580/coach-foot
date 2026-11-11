@@ -1,0 +1,12 @@
+{
+  "name": "Olympique Villefontaine U6",
+  "short_name": "OV U6",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#12287a",
+  "theme_color": "#12287a",
+  "icons": [
+    { "src": "logo-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "logo.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}

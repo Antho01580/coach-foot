@@ -1,0 +1,973 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#12287a">
+<meta name="mobile-web-app-capable" content="yes">
+<title>Coach Foot</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="logo-192.png">
+<link rel="apple-touch-icon" href="logo-192.png">
+<style>
+:root{--g:#1d3fa6;--g2:#e4ebfb;--ok:#15803d;--ok2:#e3f5e9;--red:#e2463f;--r:#c62828;--r2:#fdecea;--o:#e67e00;--o2:#fff3e0;--b:#e2463f;--b2:#fde8e6;--bg:#f2f4f9;--t:#1a1f1c;--m:#6b7570;--l:#dde3df}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--t);font-size:16px;padding-bottom:84px}
+header{background:linear-gradient(100deg,#12287a,#1d4fc0);display:flex;align-items:center;gap:10px;color:#fff;padding:14px 16px;padding-top:calc(14px + env(safe-area-inset-top));font-weight:700;font-size:19px;position:sticky;top:0;z-index:5}
+main{padding:12px;max-width:640px;margin:0 auto}
+h3{margin:18px 4px 8px;font-size:14px;text-transform:uppercase;letter-spacing:.04em;color:var(--m)}
+.card{background:#fff;border-radius:14px;padding:14px;margin-bottom:10px;box-shadow:0 1px 2px rgba(0,0,0,.06)}
+label{display:block;font-size:13px;color:var(--m);margin:8px 0 0}
+input,textarea,select{display:block;width:100%;margin-top:4px;padding:11px 12px;border:1px solid var(--l);border-radius:10px;font:inherit;color:var(--t);background:#fff}
+textarea{resize:vertical}
+input:focus,textarea:focus{outline:2px solid var(--g);border-color:transparent}
+.btn{border:0;border-radius:12px;padding:12px 14px;font:inherit;font-weight:600;background:var(--g);color:#fff;cursor:pointer;text-decoration:none;display:inline-block;text-align:center}
+.btn.big{width:100%;padding:15px;font-size:17px;margin-top:10px}
+.btn.match,.btn.blue{background:var(--b)}
+.btn.ghost{background:transparent;color:var(--g);border:1px solid var(--l)}
+.btn.red{color:var(--r)}
+.btn.sm{padding:7px 10px;font-size:14px}
+.btn.wa{background:#25d366}
+.btn.mail{background:#12287a}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px}
+.row2 .btn.big{margin-top:0}
+.bar{display:flex;justify-content:space-between;margin-bottom:10px;gap:8px}
+.badge{font-size:12px;font-weight:700;padding:3px 8px;border-radius:20px;background:var(--g2);color:var(--g)}
+.badge.match{background:var(--b2);color:var(--b)}
+.ev{cursor:pointer}
+.sub{color:var(--m);font-size:14px;margin-top:4px}
+.cnt,.sum{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px;font-size:14px;font-weight:600}
+.sum{background:#fff;border-radius:12px;padding:10px 12px;margin-bottom:10px}
+.p{color:var(--ok)}.a{color:var(--r)}.e{color:var(--o)}.n{color:var(--m)}
+.seg{display:flex;background:#eef1ef;border-radius:12px;padding:3px;margin-top:10px}
+.seg button{flex:1;border:0;background:transparent;padding:10px 4px;border-radius:10px;font:inherit;font-weight:600;color:var(--m);font-size:15px}
+.seg button.on{background:#fff;color:var(--t);box-shadow:0 1px 3px rgba(0,0,0,.1)}
+.seg.big{margin:4px 0 12px}
+.pl{display:flex;align-items:center;justify-content:space-between;background:#fff;border-radius:12px;padding:8px 8px 8px 14px;margin-bottom:6px;border-left:5px solid var(--l)}
+.pl.P{border-left-color:var(--ok)}.pl.A{border-left-color:var(--r);background:var(--r2)}.pl.E{border-left-color:var(--o);background:var(--o2)}
+.nm{font-weight:600}
+.pb{display:flex;gap:6px}
+.pb button{width:46px;height:42px;border-radius:10px;border:1px solid var(--l);background:#fff;font-size:18px;font-weight:700;color:var(--m)}
+.pb .P.on{background:var(--ok);color:#fff;border-color:var(--ok)}
+.pb .A.on{background:var(--r);color:#fff;border-color:var(--r)}
+.pb .E.on{background:var(--o);color:#fff;border-color:var(--o)}
+.th{display:flex;justify-content:space-between;align-items:center;margin-top:12px;gap:8px}
+.th:first-child{margin-top:0}
+.chk{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}
+.ck{display:flex;align-items:center;gap:8px;margin:0;padding:10px;border:1px solid var(--l);border-radius:10px;color:var(--t);font-size:15px}
+.ck input{width:20px;height:20px;margin:0;flex:none;accent-color:var(--g)}
+.ck.on{background:var(--g2);border-color:var(--g)}
+.ck small{color:var(--m)}
+.hint{background:var(--o2);border-radius:12px;padding:12px;margin:10px 0;font-size:14px}
+.info{background:var(--b2);border-radius:12px;padding:12px;margin:10px 0;font-size:14px}
+.empty{text-align:center;color:var(--m);padding:30px 0}
+.prow{display:flex;justify-content:space-between;align-items:center;cursor:pointer}
+.st{display:flex;align-items:center;justify-content:space-between;cursor:pointer}
+.pct{font-size:22px;font-weight:800;min-width:64px;text-align:right}
+.good{color:var(--ok)}.mid{color:var(--o)}.bad{color:var(--r)}
+.det{font-size:13px;color:var(--m);margin-top:3px}
+.bar2{height:6px;border-radius:3px;background:#eef1ef;margin-top:8px;overflow:hidden}
+.bar2 i{display:block;height:100%}
+.hist{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid #eef1ef;font-size:15px}
+/* calendrier */
+.calh{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.calh b{font-size:18px}
+.calh button{border:0;background:#eef1ef;border-radius:10px;width:44px;height:40px;font-size:18px}
+.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.dow{border:0;background:none;font:inherit;font-weight:700;color:var(--m);padding:6px 0;font-size:13px;border-radius:8px}
+.multi .dow{color:var(--b);background:var(--b2)}
+.day{border:0;background:#f4f6f5;border-radius:10px;height:50px;display:flex;flex-direction:column;align-items:center;justify-content:center;font:inherit;font-weight:600;color:var(--t);padding:0}
+.day.past{color:#9aa39e}
+.day.today{box-shadow:inset 0 0 0 2px var(--g)}
+.day.sel{background:var(--g);color:#fff}
+.day.pick{background:var(--b);color:#fff}
+.dots{display:flex;gap:3px;height:7px;margin-top:3px}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--g)}
+.dot.match{background:var(--b)}
+.day.sel .dot,.day.pick .dot{background:#fff}
+.legend{display:flex;gap:14px;font-size:13px;color:var(--m);margin-top:10px;justify-content:center}
+.legend i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:4px;vertical-align:middle}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.chip{border:1px solid var(--l);background:#fff;border-radius:20px;padding:7px 12px;font:inherit;font-size:14px;color:var(--t)}
+.chip.on{background:var(--g);color:#fff;border-color:var(--g)}
+.tag{font-size:12px;background:#eef1ef;border-radius:8px;padding:3px 7px;color:var(--m)}
+/* messages */
+.rc{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid #eef1ef;gap:6px}
+.rc.done .nm{color:var(--ok)}
+.rc.done .nm::after{content:" ✔"}
+.rcb{display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end}
+.rcb .btn{padding:7px 9px;font-size:13px}
+.miss{color:var(--r);font-size:13px}
+/* compte rendu + stats */
+.mic{background:var(--r);width:100%;padding:16px;font-size:17px;margin-top:10px}
+.mic.rec{animation:pulse 1.2s infinite}
+@keyframes pulse{50%{opacity:.6}}
+.score{display:grid;grid-template-columns:1fr 64px 16px 64px;gap:6px;align-items:center;margin-top:10px}
+.score input{text-align:center;font-size:20px;font-weight:700;margin:0;padding:10px 4px}
+.score span{text-align:center;font-weight:700}
+.res{font-weight:800;font-size:13px;padding:2px 7px;border-radius:8px;margin-left:4px}
+.res.V{background:var(--ok2);color:var(--ok)}.res.N{background:#eef1ef;color:var(--m)}.res.D{background:var(--r2);color:var(--r)}
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.kpi{background:#fff;border-radius:14px;padding:12px;box-shadow:0 1px 2px rgba(0,0,0,.06)}
+.kpi b{display:block;font-size:26px;font-weight:800}
+.kpi>span{font-size:13px;color:var(--m)}
+.chart{display:flex;align-items:flex-end;gap:4px;height:130px;margin-top:10px;border-bottom:1px solid var(--l)}
+.chart div{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%;font-size:10px;color:var(--m)}
+.chart i{display:block;width:100%;max-width:26px;border-radius:5px 5px 0 0;background:var(--g)}
+.chart i.match{background:var(--b)}
+.xl{display:flex;gap:4px;font-size:10px;color:var(--m)}
+.xl span{flex:1;text-align:center;overflow:hidden;white-space:nowrap}
+.hrow{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:14px}
+.hrow span:first-child{width:90px}
+.hrow .bar2{flex:1;margin:0;height:10px;border-radius:5px}
+.hrow b{width:44px;text-align:right}
+.chip.on{background:var(--g);color:#fff;border-color:var(--g)}
+nav{position:fixed;bottom:0;left:0;right:0;background:#fff;display:flex;border-top:1px solid var(--l);padding-bottom:env(safe-area-inset-bottom);z-index:5}
+nav button{flex:1;border:0;background:none;padding:9px 0 10px;font:inherit;font-size:12px;color:var(--m);display:flex;flex-direction:column;align-items:center;gap:2px}
+nav button span{font-size:21px}
+nav button.on{color:var(--g);font-weight:700}
+#toast{position:fixed;left:50%;bottom:96px;transform:translateX(-50%);background:#222;color:#fff;padding:10px 16px;border-radius:20px;font-size:14px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:10;white-space:nowrap}
+#toast.show{opacity:1}
+</style>
+</head>
+<body>
+<header><img id="logo" alt="" style="width:40px;height:40px;border-radius:50%;background:#fff;object-fit:contain;flex:none"><span id="title" style="line-height:1.15">Coach Foot</span></header>
+<main id="app"></main>
+<nav id="tabs">
+  <button data-act="tab" data-tab="events"><span>📅</span>Planning</button>
+  <button data-act="tab" data-tab="players"><span>👥</span>Joueurs</button>
+  <button data-act="tab" data-tab="stats"><span>📊</span>Présence %</button>
+  <button data-act="tab" data-tab="settings"><span>⚙️</span>Réglages</button>
+</nav>
+<div id="toast"></div>
+<script>
+const KEY = 'coachfoot_v1';
+const DEF = () => ({ players: [], events: [], settings: { club: 'Olympique Villefontaine', cat: 'U6', sig: 'Le Coach.', equip: 'protège-tibias + gourde', mail: '', resp: 'Nathalie', respMail: '', respTel: '', waLink: '', logo: '' } });
+let S;
+try { S = JSON.parse(localStorage.getItem(KEY)) || DEF(); } catch (e) { S = DEF(); }
+S.settings = { ...DEF().settings, ...S.settings };
+if (!S.settings.club) S.settings.club = 'Olympique Villefontaine';
+const respName = () => S.settings.resp || 'la responsable';
+const clubName = () => [S.settings.club, S.settings.cat].filter(Boolean).join(' ');
+const save = () => localStorage.setItem(KEY, JSON.stringify(S));
+const uid = () => Math.random().toString(36).slice(2, 9);
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+const iso = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+const parse = s => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); };
+const fmtDate = s => parse(s).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+const fmtShort = s => parse(s).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' });
+const hh = t => t ? t.replace(/^0(\d)/, '$1').replace(':', 'h').replace(/h00$/, 'h') : '';
+const newTeam = (lieu = '', ko = '') => ({ id: uid(), kind: 'plateau', name: '', adv: '', dom: 'dom', lieu, adr: '', rdv: '', ko, conv: [] });
+const kindOf = e => ((e.teams || [])[0] || {}).kind || 'match';
+const MOIS = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
+const TODAY = iso(new Date());
+
+let view = { tab: 'events', eventId: null, sub: 'presence', playerId: null, editPl: null, compose: null, since: '',
+  month: TODAY.slice(0, 7), selDay: null, multi: false, picked: [], bulk: { type: 'seance', time: '', end: '', lieu: '' } };
+
+const curEv = () => S.events.find(e => e.id === view.eventId);
+const team = id => { for (const e of S.events) for (const t of (e.teams || [])) if (t.id === id) return t; };
+const player = id => S.players.find(p => p.id === id);
+const pname = id => (player(id) || {}).name || '?';
+const phones = p => [p.tel, p.tel2].filter(x => x && x.trim());
+const mails = p => [p.mail, p.mail2].filter(x => x && x.trim());
+const cleanNum = n => n.replace(/[^\d+]/g, '');
+const intl = n => { let d = cleanNum(n); if (d.startsWith('+')) return d.slice(1); if (d.startsWith('00')) return d.slice(2); if (d.startsWith('0')) return '33' + d.slice(1); return d; };
+
+function roster(e) {
+  if (e.type === 'match') {
+    const ids = new Set();
+    (e.teams || []).forEach(t => t.conv.forEach(i => ids.add(i)));
+    if (ids.size) { Object.keys(e.presence).forEach(i => ids.add(i)); return S.players.filter(p => ids.has(p.id)); }
+  }
+  return S.players;
+}
+function counts(e) {
+  const c = { P: 0, A: 0, E: 0, N: 0 };
+  roster(e).forEach(p => c[e.presence[p.id] || 'N']++);
+  return c;
+}
+const lab = e => e && e.type === 'match' ? 'le ' + kindOf(e) : 'la séance';
+const quand = e => cap(fmtDate(e.date)) + (e.time ? ' à ' + hh(e.time) : '') + (e.lieu ? ' (' + e.lieu + ')' : '');
+
+/* ---------- MESSAGES ---------- */
+function quandRel(d) {
+  const tm = new Date(); tm.setDate(tm.getDate() + 1);
+  if (d === TODAY) return 'd\'aujourd\'hui (' + fmtDate(d) + ')';
+  if (d === iso(tm)) return 'de demain (' + fmtDate(d) + ')';
+  return 'du ' + fmtDate(d);
+}
+function msg(e, t) {
+  const kind = t.kind || 'match';
+  const players = S.players.filter(p => t.conv.includes(p.id));
+  let m = `Bonjour à tous,\n\nPour le ${kind}${t.name ? ' (' + t.name + ')' : ''} ${quandRel(e.date)} ⚽`;
+  if (t.adv) m += `\n${kind === 'match' ? '🆚 Contre' : '🆚 Avec'} ${t.adv}${kind === 'match' ? (t.dom === 'ext' ? ' (à l\'extérieur)' : ' (à domicile)') : ''}`;
+  m += '\n';
+  if (t.rdv) m += `\n🕘 Rendez-vous ${hh(t.rdv)} sur place`;
+  if (t.ko) m += `\n⏱️ Début ${hh(t.ko)}`;
+  if (S.settings.equip) m += `\n🎒 Avec ${S.settings.equip}`;
+  if (t.lieu || t.adr) {
+    m += `\n\n📍 L'adresse :${t.lieu ? '\n' + t.lieu : ''}${t.adr ? '\n' + t.adr : ''}`;
+    m += `\n🗺️ https://maps.google.com/?q=${encodeURIComponent([t.lieu, t.adr].filter(Boolean).join(' '))}`;
+  }
+  m += `\n\nLes joueurs retenus sont :\n${players.map((p, i) => (i + 1) + ' ' + p.name).join('\n') || '(à compléter)'}`;
+  m += `\n\nMerci de prévenir au plus vite en cas d'absence.`;
+  if (S.settings.sig) m += `\n${S.settings.sig}`;
+  return m;
+}
+function tpl(kind, e) {
+  const sig = S.settings.sig ? '\n\n' + S.settings.sig : '';
+  if (!e) return `Bonjour,\n\n${sig}`;
+  if (kind === 'abs') return `Bonjour,\n\n{nom} n'était pas présent(e) à ${lab(e)} du ${cap(fmtDate(e.date))}.\nTout va bien ? Merci de me prévenir à l'avance en cas d'absence 🙏${sig}`;
+  if (kind === 'cancel') return `Bonjour,\n\n⚠️ ${cap(lab(e))} du ${quand(e)} est ANNULÉ${e.type === 'match' ? '' : 'E'}.${sig}`;
+  if (kind === 'info') return `Bonjour,\n\nPetite info pour ${lab(e)} du ${quand(e)} :\n\n${sig}`;
+  if (kind === 'cr') {
+    const sc = e.type === 'match' ? (e.teams || []).filter(t => t.bp !== '' && t.bp != null && t.bc !== '' && t.bc != null)
+      .map(t => `⚽ ${t.name ? t.name + ' : ' : ''}${clubName() || 'Nous'} ${t.bp} – ${t.bc} ${t.adv || 'adversaire'}${t.buts ? '\n🥅 Buteurs : ' + t.buts : ''}`).join('\n') : '';
+    return `Bonjour,\n\n📝 Compte rendu ${e.type === 'match' ? 'du match' : 'de la séance'} du ${cap(fmtDate(e.date))}\n${sc ? '\n' + sc + '\n' : ''}\n${e.cr || ''}${sig}`;
+  }
+  return `Bonjour,\n\n${sig}`;
+}
+function subj(kind, e) {
+  const club = clubName() ? clubName() + ' – ' : '';
+  if (!e) return club + 'Information';
+  const d = cap(fmtShort(e.date));
+  return club + ({ cr: 'Compte rendu ' + lab(e) + ' ' + d, conv: 'Convocation match ' + d, abs: 'Absence de {nom} – ' + d, cancel: 'ANNULATION ' + lab(e) + ' ' + d, info: 'Info ' + lab(e) + ' ' + d }[kind] || 'Information');
+}
+const fill = (txt, p) => txt.split('{nom}').join(p ? p.name : 'votre enfant');
+
+function stats(pid) {
+  const r = { s: [0, 0], m: [0, 0], conv: 0, abs: 0, exc: 0 };
+  S.events.forEach(e => {
+    if (view.since && e.date < view.since) return;
+    if (e.type === 'match' && (e.teams || []).some(t => t.conv.includes(pid))) r.conv++;
+    const st = e.presence[pid];
+    if (!st) return;
+    const k = e.type === 'match' ? 'm' : 's';
+    r[k][1]++;
+    if (st === 'P') r[k][0]++;
+    if (st === 'A') r.abs++;
+    if (st === 'E') r.exc++;
+  });
+  const tot = r.s[1] + r.m[1];
+  r.pct = tot ? Math.round((r.s[0] + r.m[0]) / tot * 100) : null;
+  return r;
+}
+const pc = a => a[1] ? Math.round(a[0] / a[1] * 100) + '%' : '–';
+const cls = p => p === null ? 'n' : p >= 80 ? 'good' : p >= 60 ? 'mid' : 'bad';
+const col = p => p >= 80 ? 'var(--ok)' : p >= 60 ? 'var(--o)' : 'var(--r)';
+
+const hasScore = t => t.bp !== '' && t.bp != null && t.bc !== '' && t.bc != null;
+const result = t => hasScore(t) ? (+t.bp > +t.bc ? 'V' : +t.bp === +t.bc ? 'N' : 'D') : null;
+const resBadge = t => hasScore(t) ? ` <span class="res ${result(t)}">${t.bp}-${t.bc}</span>` : '';
+
+/* ---------- PLANNING ---------- */
+function card(e) {
+  const c = counts(e);
+  const sub = e.type === 'match'
+    ? (e.teams || []).map(t => esc((t.name || 'Équipe') + (t.adv ? ' vs ' + t.adv : '') + (t.lieu ? ' @ ' + t.lieu : '') + (t.ko ? ' · ' + hh(t.ko) : '')) + resBadge(t)).join('<br>')
+    : esc([e.time ? hh(e.time) + (e.end ? '–' + hh(e.end) : '') : '', e.lieu, e.note].filter(Boolean).join(' · '));
+  const marked = c.P + c.A + c.E;
+  return `<div class="card ev" data-act="openEv" data-id="${e.id}">
+    <div><span class="badge ${e.type}">${e.type === 'match' ? cap(kindOf(e)) : 'Séance'}</span> <b>${cap(fmtDate(e.date))}</b></div>
+    ${sub ? `<div class="sub">${sub}</div>` : ''}
+    ${marked ? `<div class="cnt"><span class="p">✓ ${c.P}</span><span class="a">✗ ${c.A}</span><span class="e">E ${c.E}</span>${c.N ? `<span class="n">? ${c.N}</span>` : ''}</div>` : ''}
+  </div>`;
+}
+function monthDays() {
+  const [y, m] = view.month.split('-').map(Number);
+  const n = new Date(y, m, 0).getDate();
+  return Array.from({ length: n }, (_, i) => iso(new Date(y, m - 1, i + 1)));
+}
+function eventsView() {
+  const [y, m] = view.month.split('-').map(Number);
+  const days = monthDays();
+  const offset = (parse(days[0]).getDay() + 6) % 7;
+  const by = {};
+  S.events.forEach(e => (by[e.date] = by[e.date] || []).push(e));
+  let grid = ['L', 'M', 'M', 'J', 'V', 'S', 'D'].map((l, i) => `<button class="dow" data-act="dow" data-i="${i}">${l}</button>`).join('');
+  grid += '<div></div>'.repeat(offset);
+  grid += days.map(d => {
+    const evs = (by[d] || []).sort((a, b) => a.type.localeCompare(b.type));
+    const c = ['day', d < TODAY ? 'past' : '', d === TODAY ? 'today' : '', view.multi && view.picked.includes(d) ? 'pick' : '', !view.multi && view.selDay === d ? 'sel' : ''].join(' ');
+    return `<button class="${c}" data-act="day" data-d="${d}"><span>${+d.slice(8)}</span><span class="dots">${evs.slice(0, 3).map(e => `<i class="dot ${e.type}"></i>`).join('')}</span></button>`;
+  }).join('');
+
+  let h = `<div class="card ${view.multi ? 'multi' : ''}">
+    <div class="calh"><button data-act="prevM">◀</button><b>${MOIS[m - 1]} ${y}</b><button data-act="nextM">▶</button></div>
+    <div class="grid">${grid}</div>
+    <div class="legend"><span><i style="background:var(--g)"></i>Séance</span><span><i style="background:var(--b)"></i>Plateau / match</span></div>
+  </div>`;
+
+  if (view.multi) {
+    const pk = [...view.picked].sort();
+    const B = view.bulk;
+    h += `<div class="card">
+      <div class="th"><b>🗓️ Planifier plusieurs dates</b><button class="btn ghost sm" data-act="multi">Annuler</button></div>
+      <div class="info">Touche les jours dans le calendrier, ou une <b>lettre</b> en haut (ex : <b>M</b> du mercredi) pour prendre <b>tous ces jours du mois</b>. Tu peux changer de mois et continuer.</div>
+      <b>${pk.length} date${pk.length > 1 ? 's' : ''} choisie${pk.length > 1 ? 's' : ''}</b>${pk.length ? ` <button class="btn ghost sm" data-act="clearPick">Vider</button>` : ''}
+      <div class="chips">${pk.map(d => `<span class="tag">${cap(fmtShort(d))}</span>`).join('')}</div>
+      <div class="seg"><button data-act="bulkType" data-v="seance" class="${B.type === 'seance' ? 'on' : ''}">Séances</button><button data-act="bulkType" data-v="match" class="${B.type === 'match' ? 'on' : ''}">Matchs</button></div>
+      <div class="row2"><label>${B.type === 'match' ? 'Coup d\'envoi' : 'Début'}<input type="time" data-f="bulk.time" value="${B.time}"></label>${B.type === 'match' ? '<span></span>' : `<label>Fin<input type="time" data-f="bulk.end" value="${B.end}"></label>`}</div>
+      <label>Lieu<input data-f="bulk.lieu" value="${esc(B.lieu)}" placeholder="ex : Stade municipal"></label>
+      <button class="btn big ${B.type === 'match' ? 'blue' : ''}" data-act="bulkCreate" ${pk.length ? '' : 'disabled style="opacity:.5"'}>Créer ${pk.length || ''} ${B.type === 'match' ? 'match' : 'séance'}${pk.length > 1 ? 's' : ''}</button>
+    </div>`;
+    return h;
+  }
+
+  h += `<div class="row2"><button class="btn big" data-act="newEv" data-type="seance">+ Séance</button><button class="btn big match" data-act="newEv" data-type="match">+ Plateau / Match</button></div>
+  <button class="btn big ghost" data-act="multi">🗓️ Planifier plusieurs dates (ex : tous les mercredis)</button>`;
+  if (!S.players.length) h += `<div class="hint">👋 Commence par ajouter tes joueurs dans l'onglet <b>Joueurs</b>.</div>`;
+
+  if (view.selDay) {
+    const evs = by[view.selDay] || [];
+    h += `<h3>${cap(fmtDate(view.selDay))}</h3>` + evs.map(card).join('')
+      + `<div class="row2"><button class="btn ghost" data-act="newEv" data-type="seance" data-d="${view.selDay}">+ Séance ce jour</button><button class="btn ghost" style="color:var(--b)" data-act="newEv" data-type="match" data-d="${view.selDay}">+ Match ce jour</button></div>`;
+  }
+  const monthEv = S.events.filter(e => e.date.startsWith(view.month)).sort((a, b) => a.date.localeCompare(b.date));
+  h += `<h3>${MOIS[m - 1]} : ${monthEv.length} événement${monthEv.length > 1 ? 's' : ''}</h3>` + (monthEv.length ? monthEv.map(card).join('') : '<p class="empty">Rien de prévu ce mois-ci.</p>');
+  return h;
+}
+
+/* ---------- ÉVÉNEMENT ---------- */
+function eventView() {
+  const e = curEv();
+  if (!e) { view.eventId = null; return eventsView(); }
+  const isM = e.type === 'match';
+  let h = `<div class="bar"><button class="btn ghost" data-act="back">← Retour</button><button class="btn ghost red" data-act="delEv">Supprimer</button></div>
+  <div class="card">
+    <div class="seg" style="margin-top:0"><button data-act="setType" data-type="seance" class="${!isM ? 'on' : ''}">Séance</button><button data-act="setType" data-type="match" class="${isM ? 'on' : ''}">Plateau / Match</button></div>
+    <label>Date<input type="date" data-f="ev.date" value="${e.date}"></label>
+    ${isM ? '' : `<div class="row2"><label>Début<input type="time" data-f="ev.time" value="${e.time || ''}"></label><label>Fin<input type="time" data-f="ev.end" value="${e.end || ''}"></label></div>
+    <label>Lieu<input data-f="ev.lieu" value="${esc(e.lieu || '')}" placeholder="ex : Stade municipal"></label>
+    <label>Note (facultatif)<input data-f="ev.note" value="${esc(e.note || '')}" placeholder="ex : séance technique"></label>`}
+    <div class="row2" style="margin-top:12px"><button class="btn mail" data-act="compose" data-k="info">✉️ Prévenir les parents</button><button class="btn ghost red" data-act="compose" data-k="cancel">⚠️ Annuler (message)</button></div>
+    <button class="btn big ghost" data-act="resp">📋 Envoyer la feuille de présence au responsable</button>
+  </div>`;
+  const tabs = (isM ? [['conv', '📣 Convoc.']] : []).concat([['poll', '🗳️ Sondage'], ['presence', '✅ Présence'], ['cr', '📝 CR']]);
+  h += `<div class="seg big">${tabs.map(([k, l]) => `<button data-act="sub" data-sub="${k}" class="${view.sub === k ? 'on' : ''}">${l}</button>`).join('')}</div>`;
+  if (view.sub === 'cr') return h + crView(e);
+  if (view.sub === 'poll') return h + pollView(e);
+  return h + (isM && view.sub === 'conv' ? convView(e) : presView(e));
+}
+function crView(e) {
+  const isM = e.type === 'match';
+  let h = '';
+  if (isM) h += `<div class="card"><b>Score</b>${(e.teams || []).map(t => `
+    <div class="score"><span class="nm" style="text-align:left;padding:0">${esc(t.name || clubName() || 'Nous')}<br><small class="n">vs ${esc(t.adv || 'adversaire')}</small></span><input type="number" inputmode="numeric" min="0" data-f="t.${t.id}.bp" value="${t.bp ?? ''}" placeholder="–"><span>–</span><input type="number" inputmode="numeric" min="0" data-f="t.${t.id}.bc" value="${t.bc ?? ''}" placeholder="–"></div>
+    <label>Buteurs (facultatif)<input data-f="t.${t.id}.buts" value="${esc(t.buts || '')}" placeholder="ex : Lucas x2, Inès"></label>`).join('<hr style="border:0;border-top:1px solid #eef1ef;margin:12px 0">')}</div>`;
+  h += `<div class="card">
+    <div class="th"><b>📝 Compte rendu</b><button class="btn ghost sm" data-act="crPlan">Plan type</button></div>
+    <button class="btn mic ${rec ? 'rec' : ''}" id="micBtn" data-act="dictee">${rec ? '⏹️ Arrêter la dictée' : '🎤 Dicter à la voix'}</button>
+    <p class="det">Parle normalement. Dis « <b>à la ligne</b> » pour un retour à la ligne, « <b>virgule</b> », « <b>point</b> ». Tu peux corriger au clavier ensuite.</p>
+    <textarea id="cr" data-f="ev.cr" rows="12" placeholder="Ce qui a été travaillé, points positifs, à améliorer, joueurs à féliciter…">${esc(e.cr || '')}</textarea>
+    <button class="btn big mail" data-act="compose" data-k="cr">📤 Envoyer le compte rendu aux parents</button>
+    <button class="btn big ghost" data-act="copyCr">Copier le compte rendu</button>
+  </div>`;
+  return h;
+}
+
+/* ---------- SONDAGE ---------- */
+function pollQ(e) {
+  if (e.pollQ) return e.pollQ;
+  const q = e.type === 'match'
+    ? `${cap(kindOf(e))} ${quandRel(e.date)} : votre enfant sera-t-il disponible ?`
+    : `Séance supplémentaire ${quandRel(e.date)}${e.time ? ' de ' + hh(e.time) + (e.end ? ' à ' + hh(e.end) : '') : ''}${e.lieu ? ' au ' + e.lieu : ''} : votre enfant sera-t-il présent ?`;
+  return q;
+}
+function pollMsg(e) {
+  return `Bonjour à tous,\n\n🗳️ ${pollQ(e)}\n\nMerci de répondre avec le prénom de votre enfant :\n👍 OUI  ou  👎 NON${e.pollLim ? '\n\n⏳ Réponse souhaitée avant ' + e.pollLim : ''}\n\n${S.settings.sig || ''}`;
+}
+function pollView(e) {
+  const r = e.rsvp || {};
+  const Y = S.players.filter(p => r[p.id] === 'Y'), N = S.players.filter(p => r[p.id] === 'N'), Q = S.players.filter(p => !r[p.id]);
+  return `<div class="card">
+    <b>🗳️ Demander aux parents : présent oui ou non ?</b>
+    <label>Question<textarea rows="3" data-f="ev.pollQ">${esc(pollQ(e))}</textarea></label>
+    <label>Réponse souhaitée avant (facultatif)<input data-f="ev.pollLim" value="${esc(e.pollLim || '')}" placeholder="ex : jeudi soir"></label>
+    <label>Message (modifiable)<textarea id="pollMsg" rows="9">${esc(pollMsg(e))}</textarea></label>
+    <button class="btn big wa" data-act="pollSend">📲 Envoyer au groupe parents</button>
+    <div class="info"><b>Encore mieux : un vrai sondage WhatsApp.</b> Touche « Copier la question », puis dans le groupe : <b>📎 → Sondage</b>, colle la question et mets les options <b>Oui</b> / <b>Non</b>. Les parents répondent d'un appui.
+    <button class="btn big ghost" data-act="pollCopyQ">📋 Copier la question</button></div>
+  </div>
+  <div class="sum"><span class="p">👍 ${Y.length} oui</span><span class="a">👎 ${N.length} non</span><span class="n">❔ ${Q.length} sans réponse</span></div>
+  <p class="det" style="margin:0 4px 8px">Note ici les réponses reçues :</p>
+  ${S.players.map(p => { const v = r[p.id] || ''; return `<div class="pl ${v === 'Y' ? 'P' : v === 'N' ? 'A' : ''}"><span class="nm">${esc(p.name)}</span><span class="pb"><button data-act="rsvp" data-id="${p.id}" data-s="Y" class="P ${v === 'Y' ? 'on' : ''}">👍</button><button data-act="rsvp" data-id="${p.id}" data-s="N" class="A ${v === 'N' ? 'on' : ''}">👎</button></span></div>`; }).join('')}
+  ${Q.length ? `<button class="btn big mail" data-act="pollRelance">🔔 Relancer les ${Q.length} sans réponse</button>` : ''}
+  ${Y.length && e.type === 'match' ? `<button class="btn big" data-act="pollConv">📣 Convoquer les ${Y.length} « oui »</button>` : ''}
+  ${Y.length && e.type !== 'match' ? `<button class="btn big ghost" data-act="pollPres">✅ Noter les « non » comme excusés</button>` : ''}`;
+}
+
+/* ---------- DICTÉE ---------- */
+let rec = null;
+function ponctue(t) {
+  return t.replace(/\s*(point à la ligne)\s*/gi, '.\n').replace(/\s*(à la ligne|nouvelle ligne)\s*/gi, '\n')
+    .replace(/\s*virgule\s*/gi, ', ').replace(/\s*point d'interrogation\s*/gi, ' ? ').replace(/\s*point d'exclamation\s*/gi, ' ! ')
+    .replace(/\s*\bpoint\b\s*$/gi, '. ').replace(/\s+\bpoint\b\s+/gi, '. ');
+}
+function dictee() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) { alert('La dictée n\'est pas disponible dans ce navigateur. Ouvre l\'appli avec Chrome, ou utilise le micro 🎤 du clavier.'); return; }
+  if (rec) { rec.stop(); return; }
+  const e = curEv();
+  let base = e.cr ? e.cr.replace(/\s*$/, e.cr.endsWith('\n') ? '' : ' ') : '';
+  rec = new SR();
+  rec.lang = 'fr-FR'; rec.continuous = true; rec.interimResults = true;
+  rec.onresult = ev => {
+    let interim = '';
+    for (let i = ev.resultIndex; i < ev.results.length; i++) {
+      const r = ev.results[i];
+      if (r.isFinal) {
+        let t = ponctue(r[0].transcript.trim());
+        if (!base || /[.!?\n]\s*$/.test(base)) t = t.charAt(0).toUpperCase() + t.slice(1);
+        base += t + (t.endsWith('\n') ? '' : ' ');
+      } else interim += r[0].transcript;
+    }
+    e.cr = base; save();
+    const ta = document.getElementById('cr');
+    if (ta) { ta.value = base + interim; ta.scrollTop = ta.scrollHeight; }
+  };
+  rec.onerror = ev => { if (ev.error === 'not-allowed') alert('Autorise le micro pour Chrome dans les réglages du téléphone.'); };
+  rec.onend = () => { rec = null; const b = document.getElementById('micBtn'); if (b) { b.classList.remove('rec'); b.textContent = '🎤 Dicter à la voix'; } };
+  rec.start();
+  const b = document.getElementById('micBtn');
+  if (b) { b.classList.add('rec'); b.textContent = '⏹️ Arrêter la dictée'; }
+}
+function presView(e) {
+  if (!S.players.length) return '<p class="empty">Ajoute d\'abord tes joueurs (onglet Joueurs).</p>';
+  const list = roster(e), c = counts(e);
+  const by = s => list.filter(p => e.presence[p.id] === s).map(p => esc(p.name));
+  let h = `<div class="sum"><span class="p">${c.P} présents</span><span class="a">${c.A} absents</span><span class="e">${c.E} excusés</span>${c.N ? `<span class="n">${c.N} non pointés</span>` : ''}</div>`;
+  if (list !== S.players) h += `<div class="hint">Seuls les joueurs convoqués sont affichés.</div>`;
+  h += `<div class="row2" style="margin-bottom:10px"><button class="btn" data-act="allP">Tous présents</button><button class="btn ghost" data-act="restA">Non pointés → absents</button></div>`;
+  h += list.map(p => {
+    const s = e.presence[p.id] || '';
+    const b = (k, l) => `<button data-act="mark" data-id="${p.id}" data-s="${k}" class="${k} ${s === k ? 'on' : ''}">${l}</button>`;
+    return `<div class="pl ${s}"><span class="nm">${esc(p.name)}</span><span class="pb">${b('P', '✓')}${b('A', '✗')}${b('E', 'E')}</span></div>`;
+  }).join('');
+  h += `<p class="det" style="text-align:center">✓ présent · ✗ absent · E excusé (retouche pour annuler)</p>`;
+  const A = by('A'), E = by('E');
+  if (A.length || E.length) h += `<div class="card"><div><b class="a">Absents :</b> ${A.join(', ') || '—'}</div><div style="margin-top:6px"><b class="e">Excusés :</b> ${E.join(', ') || '—'}</div>
+    ${A.length ? `<button class="btn big mail" data-act="compose" data-k="abs">📩 Envoyer un message aux parents des absents (${A.length})</button>` : ''}</div>`;
+  h += `<button class="btn big wa" data-act="resp">📋 Envoyer la feuille de présence à ${esc(respName())}</button>`;
+  return h;
+}
+function convView(e) {
+  if (!e.teams || !e.teams.length) e.teams = [newTeam()];
+  const owner = new Map();
+  e.teams.forEach(t => t.conv.forEach(id => owner.set(id, t)));
+  let h = e.teams.map((t, i) => `<div class="card">
+    <div class="th"><b>${e.teams.length > 1 ? 'Équipe ' + (i + 1) : 'Infos du match'}</b>${e.teams.length > 1 ? `<button class="btn ghost red sm" data-act="delTeam" data-id="${t.id}">Retirer</button>` : ''}</div>
+    <label>Nom de l'équipe<input data-f="t.${t.id}.name" value="${esc(t.name)}" placeholder="ex : U11 A"></label>
+    <div class="seg">${['plateau', 'match', 'tournoi'].map(k => `<button data-act="kind" data-id="${t.id}" data-v="${k}" class="${(t.kind || 'match') === k ? 'on' : ''}">${cap(k)}</button>`).join('')}</div>
+    <label>${(t.kind || 'match') === 'match' ? 'Adversaire' : 'Clubs présents (facultatif)'}<input data-f="t.${t.id}.adv" value="${esc(t.adv)}" placeholder="${(t.kind || 'match') === 'match' ? 'ex : FC Voisin' : 'ex : Creys-Mépieu, Morestel…'}"></label>
+    ${(t.kind || 'match') !== 'match' ? '' : `<div class="seg"><button data-act="dom" data-id="${t.id}" data-v="dom" class="${t.dom !== 'ext' ? 'on' : ''}">🏠 Domicile</button><button data-act="dom" data-id="${t.id}" data-v="ext" class="${t.dom === 'ext' ? 'on' : ''}">🚌 Extérieur</button></div>`}
+    <label>Lieu (stade)<input data-f="t.${t.id}.lieu" value="${esc(t.lieu)}" placeholder="ex : Stade de Bracon"></label>
+    <label>Adresse<input data-f="t.${t.id}.adr" value="${esc(t.adr)}" placeholder="ex : Route de Bracon, 38510 Creys-Mépieu"></label>
+    <div class="row2"><label>Rendez-vous<input type="time" data-f="t.${t.id}.rdv" value="${t.rdv}"></label><label>Début<input type="time" data-f="t.${t.id}.ko" value="${t.ko}"></label></div>
+    <div class="th"><b>Convoqués (${t.conv.length})</b><span><button class="btn ghost sm" data-act="convAll" data-id="${t.id}">Tous</button> <button class="btn ghost sm" data-act="convNone" data-id="${t.id}">Aucun</button></span></div>
+    ${S.players.length ? '' : '<p class="det">Ajoute d\'abord tes joueurs.</p>'}
+    <div class="chk">${S.players.map(p => {
+      const on = t.conv.includes(p.id), o = owner.get(p.id), other = o && o !== t;
+      return `<label class="ck ${on ? 'on' : ''}"><input type="checkbox" data-conv="${t.id}" data-p="${p.id}" ${on ? 'checked' : ''}><span>${esc(p.name)}${p.lic === false ? ' <small class="miss">⚠️ licence</small>' : ''}${other ? ` <small>(${esc(o.name || 'autre équipe')})</small>` : ''}</span></label>`;
+    }).join('')}</div>
+    <label>Message (modifiable avant envoi)<textarea id="msg-${t.id}" rows="14">${esc(msg(e, t))}</textarea></label>
+    <button class="btn big mail" data-act="compose" data-k="conv" data-id="${t.id}">📤 Envoyer aux parents (SMS / mail)</button>
+    <div class="row2" style="margin-top:8px"><button class="btn wa" data-act="wa" data-id="${t.id}">📲 Groupe parents</button><button class="btn ghost" data-act="copy" data-id="${t.id}">Copier</button></div>
+    <button class="btn big ghost" data-act="convResp" data-id="${t.id}">📲 Envoyer la convocation à ${esc(respName())}</button>
+  </div>`).join('');
+  return h + `<button class="btn big ghost" data-act="addTeam">+ Ajouter une équipe (autre lieu)</button>`;
+}
+
+/* ---------- ENVOI DE MESSAGES ---------- */
+function openCompose(kind, teamId) {
+  const e = curEv();
+  const prev = { tab: view.tab, eventId: view.eventId, playerId: view.playerId, editPl: view.editPl, sub: view.sub };
+  let sel;
+  if (kind === 'conv') sel = [...team(teamId).conv];
+  else if (kind === 'abs') sel = roster(e).filter(p => e.presence[p.id] === 'A').map(p => p.id);
+  else if (e) sel = roster(e).map(p => p.id);
+  else sel = S.players.map(p => p.id);
+  view.compose = { kind, teamId, eventId: e ? e.id : null, prev, sel, done: [] };
+  setKind(kind);
+  render(); scrollTo(0, 0);
+}
+function setKind(kind) {
+  const c = view.compose, e = S.events.find(x => x.id === c.eventId);
+  c.kind = kind;
+  if (kind === 'conv') { const el = document.getElementById('msg-' + c.teamId); c.text = el ? el.value : msg(e, team(c.teamId)); }
+  else c.text = tpl(kind, e);
+  c.subject = subj(kind, e);
+}
+function composeView() {
+  const c = view.compose, e = S.events.find(x => x.id === c.eventId);
+  let kinds = e ? [['info', 'Info'], ['cancel', 'Annulation'], ['abs', 'Absence'], ['cr', 'Compte rendu'], ['free', 'Libre']] : [['free', 'Libre']];
+  if (c.teamId) kinds.unshift(['conv', 'Convocation']);
+  const sel = S.players.filter(p => c.sel.includes(p.id));
+  const nums = [...new Set(sel.flatMap(phones).map(cleanNum))], ms = [...new Set(sel.flatMap(mails))];
+  const none = sel.filter(p => !phones(p).length && !mails(p).length);
+  const chips = [['all', 'Tous']];
+  if (e) {
+    if (e.type === 'match' && (e.teams || []).some(t => t.conv.length)) chips.push(['conv', 'Convoqués']);
+    chips.push(['P', 'Présents'], ['A', 'Absents']);
+  }
+  chips.push(['none', 'Aucun']);
+  return `<div class="bar"><button class="btn ghost" data-act="back">← Retour</button></div>
+  ${e ? `<div class="card"><span class="badge ${e.type}">${e.type === 'match' ? cap(kindOf(e)) : 'Séance'}</span> <b>${cap(fmtDate(e.date))}</b></div>` : ''}
+  <div class="card">
+    <b>Type de message</b>
+    <div class="chips">${kinds.map(([k, l]) => `<button class="chip ${c.kind === k ? 'on' : ''}" data-act="cmpKind" data-v="${k}">${l}</button>`).join('')}</div>
+    <label>Objet (pour les mails)<input data-f="cmp.subject" value="${esc(c.subject)}"></label>
+    <label>Message<textarea data-f="cmp.text" rows="10">${esc(c.text)}</textarea></label>
+    <p class="det">Astuce : <b>{nom}</b> est remplacé par le nom de l'enfant dans les envois un par un (et par « votre enfant » dans les envois groupés).</p>
+  </div>
+  <div class="card">
+    <b>Destinataires : ${sel.length} enfant${sel.length > 1 ? 's' : ''}</b>
+    <div class="chips">${chips.map(([k, l]) => `<button class="chip" data-act="cmpSel" data-v="${k}">${l}</button>`).join('')}</div>
+    <div class="chk">${S.players.map(p => `<label class="ck ${c.sel.includes(p.id) ? 'on' : ''}"><input type="checkbox" data-cmp="${p.id}" ${c.sel.includes(p.id) ? 'checked' : ''}><span>${esc(p.name)}</span></label>`).join('')}</div>
+    ${none.length ? `<p class="miss">⚠️ Sans téléphone ni mail : ${none.map(p => esc(p.name)).join(', ')} (à compléter dans Joueurs)</p>` : ''}
+  </div>
+  <h3>Envoi groupé</h3>
+  <div class="card">
+    <button class="btn big" data-act="smsAll" ${nums.length ? '' : 'disabled style="opacity:.5"'}>💬 SMS à tous (${nums.length} numéro${nums.length > 1 ? 's' : ''})</button>
+    <button class="btn big mail" data-act="mailAll" ${ms.length ? '' : 'disabled style="opacity:.5"'}>✉️ Mail à tous (${ms.length} adresse${ms.length > 1 ? 's' : ''}, en copie cachée)</button>
+    <div class="row2" style="margin-top:10px"><button class="btn wa" data-act="waGroup">📲 Groupe parents</button><button class="btn ghost" data-act="copyCmp">Copier</button></div>
+    <p class="det">L'appli prépare le message dans ton appli SMS / mail / WhatsApp : il ne reste qu'à appuyer sur Envoyer.</p>
+  </div>
+  <h3>Un par un (message personnalisé)</h3>
+  <div class="card">${sel.length ? sel.map(p => {
+    const ph = phones(p), ml = mails(p);
+    let b = '';
+    ph.forEach((n, i) => { b += `<button class="btn sm" data-act="sms1" data-id="${p.id}" data-i="${i}">💬${ph.length > 1 ? ' P' + (i + 1) : ' SMS'}</button><button class="btn sm wa" data-act="wa1" data-id="${p.id}" data-i="${i}">WA${ph.length > 1 ? ' P' + (i + 1) : ''}</button>`; });
+    if (ml.length) b += `<button class="btn sm mail" data-act="mail1" data-id="${p.id}">✉️</button>`;
+    return `<div class="rc ${c.done.includes(p.id) ? 'done' : ''}"><span class="nm">${esc(p.name)}</span><span class="rcb">${b || '<span class="miss">pas de contact</span>'}</span></div>`;
+  }).join('') : '<p class="det">Aucun destinataire sélectionné.</p>'}</div>`;
+}
+
+/* ---------- JOUEURS ---------- */
+function playersView() {
+  return `<button class="btn big mail" style="margin-top:0" data-act="compose" data-k="free">✉️ Message à tous les parents</button>
+  <div class="card" style="margin-top:10px"><label>Ajouter des joueurs (un nom par ligne)<textarea id="newpl" rows="3" placeholder="Lucas Martin&#10;Inès Bernard&#10;..."></textarea></label><button class="btn big" data-act="addPl">Ajouter</button></div>
+  <h3>${S.players.length} joueur${S.players.length > 1 ? 's' : ''} · touche pour ajouter téléphone et mail</h3>`
+    + S.players.map(p => {
+      const np = phones(p).length, nm = mails(p).length;
+      return `<div class="card prow" data-act="editPl" data-id="${p.id}"><b>${esc(p.name)}</b><span>${np || nm ? `<span class="tag">📱 ${np}</span> <span class="tag">✉️ ${nm}</span>` : '<span class="miss">⚠️ pas de contact</span>'}${p.lic === false ? ' <span class="miss">⚠️ licence</span>' : ''} ›</span></div>`;
+    }).join('');
+}
+function editPlView() {
+  const p = player(view.editPl);
+  if (!p) { view.editPl = null; return playersView(); }
+  const f = (k, l, type, ph) => `<label>${l}<input type="${type}" data-f="pl.${p.id}.${k}" value="${esc(p[k] || '')}" placeholder="${ph}"></label>`;
+  return `<div class="bar"><button class="btn ghost" data-act="back">← Retour</button><button class="btn ghost red" data-act="delPl" data-id="${p.id}">Supprimer</button></div>
+  <div class="card">
+    ${f('name', 'Nom de l\'enfant', 'text', '')}
+    ${f('tel', 'Téléphone parent 1', 'tel', '06 12 34 56 78')}
+    ${f('tel2', 'Téléphone parent 2', 'tel', 'facultatif')}
+    ${f('mail', 'Mail parent 1', 'email', 'parent@mail.com')}
+    ${f('mail2', 'Mail parent 2', 'email', 'facultatif')}
+    ${f('note', 'Remarque', 'text', 'ex : allergie…')}
+    <div class="seg"><button data-act="lic" data-id="${p.id}" data-v="1" class="${p.lic !== false ? 'on' : ''}">✅ Licence OK</button><button data-act="lic" data-id="${p.id}" data-v="0" class="${p.lic === false ? 'on' : ''}">⚠️ Pas de licence</button></div>
+  </div>
+  <div class="row2">${phones(p).map((n, i) => `<a class="btn ghost" href="tel:${cleanNum(n)}">📞 Appeler P${i + 1}</a>`).join('')}</div>
+  <button class="btn big ghost" data-act="openPl" data-id="${p.id}">📊 Voir ses présences</button>`;
+}
+
+/* ---------- STATS ---------- */
+function evPct(e) { let p = 0, n = 0; Object.values(e.presence).forEach(s => { n++; if (s === 'P') p++; }); return { p, n, pct: n ? Math.round(p / n * 100) : null }; }
+const avg = a => a.length ? Math.round(a.reduce((x, y) => x + y, 0) / a.length) : null;
+function teamView() {
+  const evs = S.events.filter(e => !view.since || e.date >= view.since).sort((a, b) => a.date.localeCompare(b.date));
+  const pointed = evs.filter(e => Object.keys(e.presence).length);
+  const se = pointed.filter(e => e.type === 'seance'), ma = pointed.filter(e => e.type === 'match');
+  const teams = evs.filter(e => e.type === 'match').flatMap(e => (e.teams || []).filter(hasScore).map(t => ({ e, t })));
+  const R = { V: 0, N: 0, D: 0 }; let bp = 0, bc = 0;
+  teams.forEach(({ t }) => { R[result(t)]++; bp += +t.bp; bc += +t.bc; });
+  const pS = avg(se.map(e => evPct(e).pct)), pM = avg(ma.map(e => evPct(e).pct));
+  const kpi = (v, l, c = '') => `<div class="kpi"><b class="${c}">${v ?? '–'}</b><span>${l}</span></div>`;
+  let h = `<div class="kpis">
+    ${kpi(pS === null ? '–' : pS + '%', 'Présence moyenne en séance', pS === null ? '' : cls(pS))}
+    ${kpi(pM === null ? '–' : pM + '%', 'Présence moyenne en match', pM === null ? '' : cls(pM))}
+    ${kpi(se.length ? (se.reduce((x, e) => x + evPct(e).p, 0) / se.length).toFixed(1).replace('.0', '') : '–', 'Présents par séance (moyenne)')}
+    ${kpi(se.length + ' / ' + ma.length, 'Séances / matchs pointés')}
+  </div>`;
+  if (teams.length) h += `<div class="kpis">
+    ${kpi(`<span class="p">${R.V}</span>-<span class="n">${R.N}</span>-<span class="a">${R.D}</span>`, 'Victoires – Nuls – Défaites')}
+    ${kpi(`${bp} / ${bc}`, `Buts marqués / encaissés (${bp - bc >= 0 ? '+' : ''}${bp - bc})`)}
+  </div>`;
+  const last = pointed.slice(-14);
+  if (last.length) h += `<div class="card"><b>Présence par séance / match</b><div class="det">Les ${last.length} derniers pointages · <span class="p">■</span> séance <span style="color:var(--b)">■</span> match</div>
+    <div class="chart">${last.map(e => { const x = evPct(e); return `<div title="${x.p}/${x.n}">${x.pct}%<i class="${e.type}" style="height:${Math.max(x.pct, 3)}%"></i></div>`; }).join('')}</div>
+    <div class="xl">${last.map(e => `<span>${+e.date.slice(8)}/${+e.date.slice(5, 7)}</span>`).join('')}</div></div>`;
+  const J = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'];
+  const byDay = {};
+  se.forEach(e => { const d = (parse(e.date).getDay() + 6) % 7; (byDay[d] = byDay[d] || []).push(evPct(e).pct); });
+  const ks = Object.keys(byDay).sort();
+  if (ks.length) h += `<div class="card"><b>Présence selon le jour d'entraînement</b>${ks.map(d => { const v = avg(byDay[d]); return `<div class="hrow"><span>${J[d]}</span><div class="bar2"><i style="width:${v}%;background:${col(v)}"></i></div><b>${v}%</b></div>`; }).join('')}</div>`;
+  const rows = S.players.map(p => ({ p, ...stats(p.id) })).filter(r => r.pct !== null);
+  if (rows.length) {
+    const top = [...rows].sort((a, b) => b.pct - a.pct).slice(0, 3);
+    const low = rows.filter(r => r.pct < 70).sort((a, b) => a.pct - b.pct).slice(0, 5);
+    h += `<div class="card"><b>⭐ Les plus assidus</b>${top.map(r => `<div class="hist st" data-act="openPl" data-id="${r.p.id}"><span>${esc(r.p.name)}</span><b class="${cls(r.pct)}">${r.pct}%</b></div>`).join('')}
+      ${low.length ? `<div style="margin-top:12px"><b>⚠️ À surveiller (moins de 70 %)</b></div>${low.map(r => `<div class="hist st" data-act="openPl" data-id="${r.p.id}"><span>${esc(r.p.name)} <small class="n">${r.abs} abs.</small></span><b class="${cls(r.pct)}">${r.pct}%</b></div>`).join('')}` : ''}</div>`;
+  }
+  if (teams.length) h += `<div class="card"><b>Résultats</b>${teams.slice().reverse().map(({ e, t }) => `<div class="hist st" data-act="openEv" data-id="${e.id}"><span>${cap(fmtShort(e.date))} · ${esc(t.adv || 'adversaire')}${t.buts ? `<br><small class="n">⚽ ${esc(t.buts)}</small>` : ''}</span><span class="res ${result(t)}">${t.bp}-${t.bc}</span></div>`).join('')}</div>`;
+  if (!pointed.length && !teams.length) h += '<p class="empty">Les statistiques apparaîtront dès que tu auras pointé des séances ou rentré des scores.</p>';
+  return h;
+}
+function statsView() {
+  if (!S.players.length) return '<p class="empty">Aucun joueur.</p>';
+  const sub = view.statSub || 'team';
+  const head = `<div class="card"><label>Compter depuis le (laisser vide = toute la saison)<input type="date" data-f="view.since" value="${view.since}"></label></div>
+  <div class="seg big"><button data-act="statSub" data-v="team" class="${sub === 'team' ? 'on' : ''}">📈 Équipe</button><button data-act="statSub" data-v="players" class="${sub === 'players' ? 'on' : ''}">👤 Par joueur</button></div>`;
+  if (sub === 'team') return head + `<button class="btn big mail" style="margin:0 0 10px" data-act="resp">📋 Envoyer le bilan au responsable</button>` + teamView();
+  const rows = S.players.map(p => ({ p, ...stats(p.id) })).sort((a, b) => (a.pct ?? 101) - (b.pct ?? 101));
+  return head + `<p class="det" style="margin:0 4px 8px">Trié du moins présent au plus présent. Touche un joueur pour voir son détail.</p>`
+    + rows.map(r => `<div class="card st" data-act="openPl" data-id="${r.p.id}"><div style="flex:1">
+      <b>${esc(r.p.name)}</b>
+      <div class="det">Séances ${r.s[0]}/${r.s[1]} (${pc(r.s)}) · Matchs ${r.m[0]}/${r.m[1]} (${pc(r.m)})</div>
+      <div class="det">${r.abs} absence${r.abs > 1 ? 's' : ''} · ${r.exc} excusé${r.exc > 1 ? 's' : ''} · convoqué ${r.conv} fois</div>
+      ${r.pct !== null ? `<div class="bar2"><i style="width:${r.pct}%;background:${col(r.pct)}"></i></div>` : ''}
+    </div><div class="pct ${cls(r.pct)}">${r.pct === null ? '–' : r.pct + '%'}</div></div>`).join('');
+}
+function playerView() {
+  const p = player(view.playerId);
+  if (!p) { view.playerId = null; return statsView(); }
+  const r = stats(p.id);
+  const L = { P: '<span class="p">✓ Présent</span>', A: '<span class="a">✗ Absent</span>', E: '<span class="e">Excusé</span>' };
+  const evs = S.events.filter(e => e.presence[p.id] && (!view.since || e.date >= view.since)).sort((a, b) => b.date.localeCompare(a.date));
+  return `<div class="bar"><button class="btn ghost" data-act="back">← Retour</button><button class="btn ghost" data-act="editPl" data-id="${p.id}">✏️ Fiche / contacts</button></div>
+  <div class="card st"><div><b style="font-size:19px">${esc(p.name)}</b>
+    <div class="det">Séances ${pc(r.s)} · Matchs ${pc(r.m)} · convoqué ${r.conv} fois</div></div>
+    <div class="pct ${cls(r.pct)}">${r.pct === null ? '–' : r.pct + '%'}</div></div>
+  <div class="card">${evs.length ? evs.map(e => `<div class="hist"><span>${e.type === 'match' ? '⚽' : '🏃'} ${cap(fmtShort(e.date))}</span>${L[e.presence[p.id]]}</div>`).join('') : '<p class="det">Pas encore de pointage.</p>'}</div>`;
+}
+function settingsView() {
+  return `<div class="card" style="display:flex;align-items:center;gap:14px">
+    <img src="${logoSrc()}" style="width:72px;height:72px;border-radius:50%;object-fit:contain;background:#fff;box-shadow:0 0 0 2px var(--g2)">
+    <div style="flex:1"><b>Logo du club</b>
+    <label class="btn ghost sm" style="margin-top:6px">📷 Choisir une image<input type="file" id="logoIn" accept="image/*" style="display:none"></label>
+    ${S.settings.logo ? '<button class="btn ghost red sm" data-act="logoDel">Retirer</button>' : ''}</div>
+  </div>
+  <div class="card">
+    <div class="row2"><label>Club<input data-f="set.club" value="${esc(S.settings.club)}"></label><label>Catégorie<input data-f="set.cat" value="${esc(S.settings.cat)}" placeholder="U6"></label></div>
+    <label>À prévoir (équipement)<input data-f="set.equip" value="${esc(S.settings.equip)}"></label>
+    <label>Signature<input data-f="set.sig" value="${esc(S.settings.sig)}" placeholder="ex : Coach Anthony – 06 xx xx xx xx"></label>
+    <label>Ton mail (mis en destinataire des mails groupés, les parents en copie cachée)<input type="email" data-f="set.mail" value="${esc(S.settings.mail || '')}"></label>
+  </div>
+  <h3>Groupe WhatsApp des parents</h3>
+  <div class="card">
+    <label>Lien du groupe « Parents ${esc(S.settings.cat || '')} »<input type="url" data-f="set.waLink" value="${esc(S.settings.waLink)}" placeholder="https://chat.whatsapp.com/..."></label>
+    <p class="det">Pour l'obtenir : dans WhatsApp, ouvre le groupe → touche son nom → <b>Inviter via un lien</b> → <b>Copier le lien</b>, puis colle-le ici.<br>Ensuite, le bouton <b>« Groupe parents »</b> copie le message et ouvre directement le groupe : tu n'as plus qu'à <b>appuyer longuement → Coller → Envoyer</b>.</p>
+  </div>
+  <h3>Responsable (feuilles de présence, bilans)</h3>
+  <div class="card">
+    <label>Nom<input data-f="set.resp" value="${esc(S.settings.resp)}" placeholder="ex : Responsable école de foot"></label>
+    <div class="row2"><label>Mail<input type="email" data-f="set.respMail" value="${esc(S.settings.respMail)}"></label><label>Téléphone<input type="tel" data-f="set.respTel" value="${esc(S.settings.respTel)}"></label></div>
+  </div>
+  <h3>Sauvegarde</h3>
+  <div class="card">
+    <p class="det" style="margin-top:0">Les données sont enregistrées dans le téléphone. Fais une sauvegarde de temps en temps (fichier à garder ou à s'envoyer par mail).</p>
+    <button class="btn big" data-act="export">⬇️ Exporter une sauvegarde</button>
+    <label class="btn big ghost" style="color:var(--g)">⬆️ Importer une sauvegarde<input type="file" id="imp" accept=".json,application/json" style="display:none"></label>
+    <button class="btn big ghost red" data-act="reset">Tout effacer</button>
+  </div>`;
+}
+
+/* ---------- LOGO ---------- */
+const logoSrc = () => S.settings.logo || 'logo.png';
+
+/* ---------- ENVOI AU RESPONSABLE ---------- */
+const lst = a => a.length ? a.map(n => '• ' + n).join('\n') : '—';
+function rapport(e) {
+  const list = roster(e), by = s => list.filter(p => (e.presence[p.id] || 'N') === s).map(p => p.name);
+  const P = by('P'), A = by('A'), E = by('E'), N = by('N');
+  let r = `📋 FEUILLE DE PRÉSENCE – ${clubName()}\n${e.type === 'match' ? '⚽ Match' : '🏃 Séance'} du ${cap(fmtDate(e.date))}`;
+  if (e.type !== 'match') r += (e.time ? ` – ${hh(e.time)}${e.end ? '-' + hh(e.end) : ''}` : '') + (e.lieu ? `\n📍 ${e.lieu}` : '');
+  else (e.teams || []).forEach(t => {
+    r += `\n${t.name ? t.name + ' ' : ''}vs ${t.adv || 'adversaire'}${t.lieu ? ' @ ' + t.lieu : ''}${hasScore(t) ? ` : ${t.bp}-${t.bc}` : ''}${t.buts ? ` (buts : ${t.buts})` : ''}`;
+  });
+  r += `\n\n✅ Présents : ${P.length} / ${list.length}\n${lst(P)}\n\n❌ Absents : ${A.length}\n${lst(A)}\n\n🟠 Excusés : ${E.length}\n${lst(E)}`;
+  if (N.length) r += `\n\n❔ Non pointés : ${N.join(', ')}`;
+  if (e.cr) r += `\n\n📝 Compte rendu :\n${e.cr.trim()}`;
+  if (e.com) r += `\n\n💬 Commentaire :\n${e.com.trim()}`;
+  if (S.settings.sig) r += `\n\n${S.settings.sig}`;
+  return r;
+}
+function bilan() {
+  const evs = S.events.filter(e => !view.since || e.date >= view.since);
+  const pointed = evs.filter(e => Object.keys(e.presence).length);
+  const se = pointed.filter(e => e.type === 'seance'), ma = pointed.filter(e => e.type === 'match');
+  const pS = avg(se.map(e => evPct(e).pct)), pM = avg(ma.map(e => evPct(e).pct));
+  const R = { V: 0, N: 0, D: 0 }; let bp = 0, bc = 0;
+  evs.filter(e => e.type === 'match').forEach(e => (e.teams || []).filter(hasScore).forEach(t => { R[result(t)]++; bp += +t.bp; bc += +t.bc; }));
+  let r = `📊 BILAN DE PRÉSENCE – ${clubName()}\n${view.since ? 'Depuis le ' + fmtDate(view.since) : 'Toute la saison'} (au ${fmtDate(TODAY)})\n\n`;
+  r += `🏃 ${se.length} séances – présence moyenne ${pS ?? '–'} %\n⚽ ${ma.length} matchs – présence moyenne ${pM ?? '–'} %\n`;
+  if (R.V + R.N + R.D) r += `🏆 Bilan : ${R.V} V – ${R.N} N – ${R.D} D (buts ${bp} / ${bc})\n`;
+  r += `\n👥 Par joueur (${S.players.length}) :\n` + S.players.map(p => { const s = stats(p.id); return `• ${p.name} : ${s.pct === null ? '–' : s.pct + ' %'} (${s.s[0] + s.m[0]}/${s.s[1] + s.m[1]})${s.abs ? ' – ' + s.abs + ' abs.' : ''}${s.exc ? ' – ' + s.exc + ' exc.' : ''}`; }).join('\n');
+  if (view.resp && view.resp.com) r += `\n\n💬 Commentaire :\n${view.resp.com.trim()}`;
+  if (S.settings.sig) r += `\n\n${S.settings.sig}`;
+  return r;
+}
+const respText = () => view.resp.eventId ? rapport(S.events.find(x => x.id === view.resp.eventId)) : bilan();
+function respView() {
+  const c = view.resp, e = c.eventId ? S.events.find(x => x.id === c.eventId) : null;
+  const st = S.settings;
+  return `<div class="bar"><button class="btn ghost" data-act="back">← Retour</button></div>
+  <div class="card"><b>👤 ${esc(st.resp || 'Responsable')}</b>
+    <div class="det">${[st.respMail, st.respTel].filter(Boolean).map(esc).join(' · ') || '<span class="miss">Mail / téléphone non renseignés</span> – à remplir dans Réglages'}</div></div>
+  <div class="card">
+    <label>💬 Commentaire pour le responsable<textarea rows="4" data-f="${e ? 'ev.com' : 'resp.com'}" placeholder="ex : bonne séance, 2 enfants à recontacter, besoin de chasubles…">${esc(e ? e.com || '' : c.com || '')}</textarea></label>
+    <label>Aperçu (modifiable avant envoi)<textarea id="rapport" rows="16">${esc(respText())}</textarea></label>
+  </div>
+  <div class="card">
+    <button class="btn big wa" style="margin-top:0" data-act="respWa">📲 Envoyer à ${esc(respName())} sur WhatsApp</button>
+    <div class="row2" style="margin-top:8px"><button class="btn mail" data-act="respMail">✉️ Mail</button><button class="btn" data-act="respSms">💬 SMS</button></div>
+    <div class="row2" style="margin-top:8px"><button class="btn ghost" data-act="respShare">Partager…</button><button class="btn ghost" data-act="respCopy">Copier</button></div>
+  </div>`;
+}
+function openResp(eventId) {
+  const prev = { tab: view.tab, eventId: view.eventId, playerId: view.playerId, editPl: view.editPl, sub: view.sub, compose: null };
+  view.resp = { eventId, prev, com: '' };
+  render(); scrollTo(0, 0);
+}
+function waParents(text) {
+  const link = (S.settings.waLink || '').trim();
+  if (!link) { window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank'); return; }
+  try { navigator.clipboard.writeText(text); } catch (e) {}
+  toast('Message copié ✔ Colle-le dans le groupe');
+  window.open(link, '_blank');
+}
+
+const TITLES = { events: 'Planning', players: 'Joueurs', stats: 'Présence %', settings: 'Réglages' };
+function render() {
+  document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === view.tab));
+  const app = document.getElementById('app');
+  let title = (S.settings.cat || 'Coach') + ' · ' + TITLES[view.tab];
+  const lg = document.getElementById('logo'); if (lg.dataset.src !== logoSrc()) { lg.dataset.src = logoSrc(); lg.src = logoSrc(); }
+  if (view.resp) { app.innerHTML = respView(); title = '📋 Envoi au responsable'; }
+  else if (view.compose) { app.innerHTML = composeView(); title = '✉️ Message aux parents'; }
+  else if (view.editPl) { app.innerHTML = editPlView(); title = '👤 Fiche joueur'; }
+  else if (view.eventId) { app.innerHTML = eventView(); const e = curEv(); if (e) title = (e.type === 'match' ? cap(kindOf(e)) + ' · ' : 'Séance · ') + cap(fmtShort(e.date)); }
+  else if (view.playerId) { app.innerHTML = playerView(); title = '📊 Détail joueur'; }
+  else app.innerHTML = { events: eventsView, players: playersView, stats: statsView, settings: settingsView }[view.tab]();
+  document.getElementById('title').textContent = title;
+}
+
+/* ---------- ACTIONS ---------- */
+function toast(t) { const el = document.getElementById('toast'); el.textContent = t; el.classList.add('show'); clearTimeout(toast.h); toast.h = setTimeout(() => el.classList.remove('show'), 1800); }
+async function copy(text) {
+  try { await navigator.clipboard.writeText(text); }
+  catch (e) { const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); }
+  toast('Message copié ✔');
+}
+function nextSaturday() { const d = new Date(); d.setDate(d.getDate() + ((6 - d.getDay() + 7) % 7)); return iso(d); }
+const go = url => { location.href = url; };
+const smsUrl = (nums, body) => `sms:${nums.join(';')}?body=${encodeURIComponent(body)}`;
+const mailUrl = (to, bcc, s, body) => `mailto:${to.map(encodeURIComponent).join(',')}?${bcc.length ? 'bcc=' + bcc.map(encodeURIComponent).join(',') + '&' : ''}subject=${encodeURIComponent(s)}&body=${encodeURIComponent(body)}`;
+const markDone = id => { const c = view.compose; if (!c.done.includes(id)) c.done.push(id); setTimeout(render, 300); };
+function shiftMonth(n) { const [y, m] = view.month.split('-').map(Number); view.month = iso(new Date(y, m - 1 + n, 1)).slice(0, 7); render(); }
+function createEvent(type, date, time = '', end = '', lieu = '') {
+  const e = { id: uid(), type, date, time: type === 'match' ? '' : time, end: type === 'match' ? '' : end, lieu: type === 'match' ? '' : lieu, note: '', presence: {}, teams: type === 'match' ? [newTeam(lieu, time)] : [] };
+  S.events.push(e);
+  return e;
+}
+
+const ACT = {
+  rsvp: (b, id) => { const e = curEv(); e.rsvp = e.rsvp || {}; const s = b.dataset.s; if (e.rsvp[id] === s) delete e.rsvp[id]; else e.rsvp[id] = s; save(); render(); },
+  pollSend: () => waParents(document.getElementById('pollMsg').value),
+  pollCopyQ: () => copy(pollQ(curEv())),
+  pollRelance: () => {
+    const e = curEv(), r = e.rsvp || {};
+    openCompose('free');
+    view.compose.sel = S.players.filter(p => !r[p.id]).map(p => p.id);
+    view.compose.text = `Bonjour,
+
+Petit rappel 🙂 ${pollQ(e)}
+Merci de me répondre OUI ou NON pour {nom}.
+
+${S.settings.sig || ''}`;
+    view.compose.subject = 'Rappel – ' + pollQ(e);
+    render();
+  },
+  pollConv: () => { const e = curEv(), r = e.rsvp || {}; const ids = S.players.filter(p => r[p.id] === 'Y').map(p => p.id); e.teams.forEach((t, i) => t.conv = i === 0 ? ids : t.conv.filter(x => !ids.includes(x))); save(); view.sub = 'conv'; render(); toast(ids.length + ' joueurs convoqués ✔'); },
+  pollPres: () => { const e = curEv(), r = e.rsvp || {}; S.players.forEach(p => { if (!e.presence[p.id]) { if (r[p.id] === 'N') e.presence[p.id] = 'E'; } }); save(); view.sub = 'presence'; render(); toast('Les « non » sont notés excusés'); },
+  statSub: b => { view.statSub = b.dataset.v; render(); },
+  dictee: () => dictee(),
+  crPlan: () => {
+    const e = curEv();
+    const plan = `✅ Points positifs :\n\n🔧 À travailler :\n\n⭐ Joueurs à féliciter :\n\n📌 Prochaine fois :\n`;
+    e.cr = (e.cr ? e.cr.replace(/\s*$/, '\n\n') : '') + plan; save(); render();
+  },
+  copyCr: () => copy(tpl('cr', curEv())),
+  tab: b => { view = { ...view, tab: b.dataset.tab, eventId: null, playerId: null, editPl: null, compose: null, resp: null }; render(); scrollTo(0, 0); },
+  prevM: () => shiftMonth(-1),
+  nextM: () => shiftMonth(1),
+  day: b => {
+    const d = b.dataset.d;
+    if (view.multi) { view.picked = view.picked.includes(d) ? view.picked.filter(x => x !== d) : [...view.picked, d]; }
+    else view.selDay = view.selDay === d ? null : d;
+    render();
+  },
+  dow: b => {
+    if (!view.multi) { view.multi = true; view.picked = []; }
+    const i = +b.dataset.i;
+    const ds = monthDays().filter(d => (parse(d).getDay() + 6) % 7 === i);
+    const all = ds.every(d => view.picked.includes(d));
+    view.picked = all ? view.picked.filter(d => !ds.includes(d)) : [...new Set([...view.picked, ...ds])];
+    render();
+  },
+  multi: () => { view.multi = !view.multi; view.picked = []; render(); },
+  clearPick: () => { view.picked = []; render(); },
+  bulkType: b => { view.bulk.type = b.dataset.v; render(); },
+  bulkCreate: () => {
+    const B = view.bulk, n = view.picked.length;
+    if (!n) return;
+    view.picked.sort().forEach(d => createEvent(B.type, d, B.time, B.end, B.lieu));
+    save(); view.multi = false; view.picked = []; render();
+    toast(n + ' ' + (B.type === 'match' ? 'match' : 'séance') + (n > 1 ? 's' : '') + ' créé' + (B.type === 'match' ? '' : 'e') + (n > 1 ? 's' : '') + ' ✔');
+  },
+  newEv: b => {
+    const type = b.dataset.type;
+    const e = createEvent(type, b.dataset.d || (type === 'match' ? nextSaturday() : TODAY));
+    save();
+    view.eventId = e.id; view.sub = type === 'match' ? 'conv' : 'presence'; render(); scrollTo(0, 0);
+  },
+  openEv: (b, id) => { view.eventId = id; view.sub = (S.events.find(e => e.id === id) || {}).type === 'match' ? 'conv' : 'presence'; render(); scrollTo(0, 0); },
+  openPl: (b, id) => { view.editPl = null; view.playerId = id; render(); scrollTo(0, 0); },
+  editPl: (b, id) => { view.editPl = id; render(); scrollTo(0, 0); },
+  back: () => {
+    if (view.resp) { view = { ...view, ...view.resp.prev, resp: null }; }
+    else if (view.compose) { view = { ...view, ...view.compose.prev, compose: null }; }
+    else if (view.editPl) { view.editPl = null; if (view.playerId) view.playerId = null; }
+    else { view.eventId = null; view.playerId = null; }
+    render(); scrollTo(0, 0);
+  },
+  delEv: () => { if (confirm('Supprimer cet événement ?')) { S.events = S.events.filter(e => e.id !== view.eventId); save(); ACT.back(); } },
+  setType: b => { const e = curEv(); e.type = b.dataset.type; if (e.type === 'match' && !(e.teams || []).length) e.teams = [newTeam(e.lieu || '', e.time || '')]; view.sub = e.type === 'match' ? 'conv' : 'presence'; save(); render(); },
+  sub: b => { view.sub = b.dataset.sub; render(); },
+  mark: (b, id) => { const e = curEv(); const s = b.dataset.s; if (e.presence[id] === s) delete e.presence[id]; else e.presence[id] = s; save(); render(); },
+  allP: () => { const e = curEv(); roster(e).forEach(p => e.presence[p.id] = 'P'); save(); render(); },
+  restA: () => { const e = curEv(); roster(e).forEach(p => { if (!e.presence[p.id]) e.presence[p.id] = 'A'; }); save(); render(); },
+  dom: (b, id) => { team(id).dom = b.dataset.v; save(); render(); },
+  kind: (b, id) => { team(id).kind = b.dataset.v; save(); render(); },
+  convAll: (b, id) => { const e = curEv(); e.teams.forEach(t => { if (t.id !== id) t.conv = []; }); team(id).conv = S.players.map(p => p.id); save(); render(); },
+  convNone: (b, id) => { team(id).conv = []; save(); render(); },
+  addTeam: () => { curEv().teams.push(newTeam()); save(); render(); },
+  delTeam: (b, id) => { if (confirm('Retirer cette équipe ?')) { const e = curEv(); e.teams = e.teams.filter(t => t.id !== id); save(); render(); } },
+  wa: (b, id) => waParents(document.getElementById('msg-' + id).value),
+  copy: (b, id) => copy(document.getElementById('msg-' + id).value),
+  compose: (b, id) => openCompose(b.dataset.k, id),
+  cmpKind: b => { setKind(b.dataset.v); render(); },
+  cmpSel: b => {
+    const c = view.compose, e = S.events.find(x => x.id === c.eventId), v = b.dataset.v;
+    if (v === 'all') c.sel = (e ? roster(e) : S.players).map(p => p.id);
+    else if (v === 'none') c.sel = [];
+    else if (v === 'conv') c.sel = [...new Set(e.teams.flatMap(t => t.conv))];
+    else c.sel = roster(e).filter(p => e.presence[p.id] === v).map(p => p.id);
+    render();
+  },
+  smsAll: () => { const c = view.compose; const nums = [...new Set(S.players.filter(p => c.sel.includes(p.id)).flatMap(phones).map(cleanNum))]; go(smsUrl(nums, fill(c.text))); },
+  mailAll: () => {
+    const c = view.compose; const ms = [...new Set(S.players.filter(p => c.sel.includes(p.id)).flatMap(mails))];
+    const me = S.settings.mail ? [S.settings.mail] : [];
+    go(mailUrl(me, ms, fill(c.subject), fill(c.text)));
+  },
+  waGroup: () => waParents(fill(view.compose.text)),
+  resp: () => openResp(view.eventId || null),
+  respMail: () => { const st = S.settings, e = view.resp.eventId ? S.events.find(x => x.id === view.resp.eventId) : null;
+    const sub = e ? `Feuille de présence ${clubName()} – ${e.type === 'match' ? 'match' : 'séance'} du ${fmtShort(e.date)}` : `Bilan de présence ${clubName()} – ${fmtShort(TODAY)}`;
+    go(mailUrl(st.respMail ? [st.respMail] : [], [], sub, document.getElementById('rapport').value)); },
+  respWa: () => { const t = S.settings.respTel; if (!t) { alert('Ajoute le numéro de ' + respName() + ' dans Réglages → Responsable.'); return; } window.open('https://wa.me/' + (t ? intl(t) : '') + '?text=' + encodeURIComponent(document.getElementById('rapport').value), '_blank'); },
+  respSms: () => go(smsUrl(S.settings.respTel ? [cleanNum(S.settings.respTel)] : [], document.getElementById('rapport').value)),
+  respShare: async () => { const text = document.getElementById('rapport').value; if (navigator.share) { try { await navigator.share({ text }); } catch (e) {} } else copy(text); },
+  respCopy: () => copy(document.getElementById('rapport').value),
+  convResp: (b, id) => { const t = S.settings.respTel; if (!t) { alert('Ajoute le numéro de ' + respName() + ' dans Réglages → Responsable.'); return; } window.open('https://wa.me/' + intl(t) + '?text=' + encodeURIComponent(document.getElementById('msg-' + id).value), '_blank'); },
+  lic: (b, id) => { player(id).lic = b.dataset.v === '1'; save(); render(); },
+  logoDel: () => { S.settings.logo = ''; save(); render(); },
+  copyCmp: () => copy(fill(view.compose.text)),
+  sms1: (b, id) => { const p = player(id); go(smsUrl([cleanNum(phones(p)[+b.dataset.i])], fill(view.compose.text, p))); markDone(id); },
+  wa1: (b, id) => { const p = player(id); window.open('https://wa.me/' + intl(phones(p)[+b.dataset.i]) + '?text=' + encodeURIComponent(fill(view.compose.text, p)), '_blank'); markDone(id); },
+  mail1: (b, id) => { const p = player(id); go(mailUrl(mails(p), [], fill(view.compose.subject, p), fill(view.compose.text, p))); markDone(id); },
+  addPl: () => {
+    const names = document.getElementById('newpl').value.split('\n').map(s => s.trim()).filter(Boolean);
+    if (!names.length) return;
+    names.forEach(name => S.players.push({ id: uid(), name, tel: '', tel2: '', mail: '', mail2: '', note: '' }));
+    S.players.sort((a, b) => a.name.localeCompare(b.name, 'fr'));
+    save(); render(); toast(names.length + ' joueur(s) ajouté(s)');
+  },
+  delPl: (b, id) => {
+    if (!confirm('Supprimer ' + pname(id) + ' ? (son historique de présence sera effacé)')) return;
+    S.players = S.players.filter(p => p.id !== id);
+    S.events.forEach(e => { delete e.presence[id]; (e.teams || []).forEach(t => t.conv = t.conv.filter(x => x !== id)); });
+    view.editPl = null; view.playerId = null;
+    save(); render();
+  },
+  export: () => {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([JSON.stringify(S)], { type: 'application/json' }));
+    a.download = 'coach-foot-sauvegarde-' + TODAY + '.json';
+    a.click();
+  },
+  reset: () => { if (confirm('Tout effacer ? (joueurs, séances, matchs) Cette action est définitive.')) { S = DEF(); save(); render(); } },
+};
+
+document.addEventListener('click', ev => {
+  const b = ev.target.closest('[data-act]');
+  if (!b || b.disabled) return;
+  if (rec && ['tab', 'back', 'sub', 'compose', 'delEv'].includes(b.dataset.act)) rec.stop();
+  ACT[b.dataset.act] && ACT[b.dataset.act](b, b.dataset.id);
+});
+document.addEventListener('input', ev => {
+  const f = ev.target.dataset.f;
+  if (!f) return;
+  const v = ev.target.value, [k, a, b] = f.split('.');
+  if (k === 'resp') { view.resp[a] = v; document.getElementById('rapport').value = bilan(); return; }
+  if (k === 'ev' && view.resp) { const e = S.events.find(x => x.id === view.resp.eventId); e[a] = v; save(); document.getElementById('rapport').value = rapport(e); return; }
+  if (k === 'ev' && (a === 'pollQ' || a === 'pollLim')) { const e = curEv(); e[a] = v; save(); const m = document.getElementById('pollMsg'); if (m) m.value = pollMsg(e); return; }
+  if (k === 'ev') { const e = curEv(); e[a] = v; (e.teams || []).forEach(t => { const m = document.getElementById('msg-' + t.id); if (m) m.value = msg(e, t); }); }
+  else if (k === 't') { const t = team(a); t[b] = v; const m = document.getElementById('msg-' + t.id); if (m) m.value = msg(curEv(), t); }
+  else if (k === 'pl') { player(a)[b] = v; if (b === 'name') S.players.sort((x, y) => x.name.localeCompare(y.name, 'fr')); }
+  else if (k === 'set') S.settings[a] = v;
+  else if (k === 'bulk') { view.bulk[a] = v; return; }
+  else if (k === 'cmp') { view.compose[a] = v; return; }
+  else if (k === 'view') { view[a] = v; render(); return; }
+  save();
+});
+document.addEventListener('change', ev => {
+  const el = ev.target;
+  if (el.dataset.conv) {
+    const e = curEv(), t = team(el.dataset.conv), pid = el.dataset.p;
+    if (el.checked) { e.teams.forEach(o => o.conv = o.conv.filter(x => x !== pid)); t.conv.push(pid); }
+    else t.conv = t.conv.filter(x => x !== pid);
+    save(); render();
+  }
+  if (el.dataset.cmp) {
+    const c = view.compose, pid = el.dataset.cmp;
+    c.sel = el.checked ? [...c.sel, pid] : c.sel.filter(x => x !== pid);
+    render();
+  }
+  if (el.id === 'logoIn' && el.files[0]) {
+    const img = new Image();
+    img.onload = () => {
+      const c = document.createElement('canvas'), n = 256, r = Math.min(n / img.width, n / img.height);
+      c.width = c.height = n; const x = c.getContext('2d');
+      x.drawImage(img, (n - img.width * r) / 2, (n - img.height * r) / 2, img.width * r, img.height * r);
+      S.settings.logo = c.toDataURL('image/png'); save(); render(); toast('Logo enregistré ✔');
+    };
+    img.src = URL.createObjectURL(el.files[0]);
+  }
+  if (el.id === 'imp' && el.files[0]) {
+    const r = new FileReader();
+    r.onload = () => {
+      try { const d = JSON.parse(r.result); if (!d.players || !d.events) throw 0; if (confirm('Remplacer les données actuelles par cette sauvegarde ?')) { S = d; save(); render(); toast('Sauvegarde importée ✔'); } }
+      catch (e) { alert('Fichier invalide'); }
+    };
+    r.readAsText(el.files[0]);
+  }
+});
+render();
+</script>
+</body>
+</html>
