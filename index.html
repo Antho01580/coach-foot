@@ -378,7 +378,7 @@ function eventView() {
     ${isM ? '' : `<div class="row2"><label>Début<input type="time" data-f="ev.time" value="${e.time || ''}"></label><label>Fin<input type="time" data-f="ev.end" value="${e.end || ''}"></label></div>
     <label>Lieu<input data-f="ev.lieu" value="${esc(e.lieu || '')}" placeholder="ex : Stade municipal"></label>
     <label>Note (facultatif)<input data-f="ev.note" value="${esc(e.note || '')}" placeholder="ex : séance technique"></label>`}
-    <div class="row2" style="margin-top:12px"><button class="btn mail" data-act="compose" data-k="info">✉️ Prévenir les parents</button><button class="btn ghost red" data-act="compose" data-k="cancel">⚠️ Annuler (message)</button></div>
+    <div class="row2" style="margin-top:12px"><button class="btn mail" data-act="compose" data-k="info">📲 Message aux parents</button><button class="btn ghost red" data-act="compose" data-k="cancel">⚠️ Annuler (message)</button></div>
     <button class="btn big ghost" data-act="resp">📋 Envoyer la feuille de présence au responsable</button>
   </div>`;
   const tabs = (isM ? [['conv', '📣 Convoc.']] : []).concat([['poll', '🗳️ Sondage'], ['presence', '✅ Présence'], ['cr', '📝 CR']]);
@@ -402,7 +402,7 @@ function crView(e) {
       Les majuscules se mettent toutes seules. Parle à ton rythme : le micro reste allumé jusqu'à ce que tu appuies sur Arrêter, même si tu fais des pauses.</details>
     <button class="btn ghost sm" style="margin-top:8px" data-act="undoDictee">↩️ Annuler la dernière dictée</button>
     <textarea id="cr" data-f="ev.cr" rows="12" placeholder="Ce qui a été travaillé, points positifs, à améliorer, joueurs à féliciter…">${esc(e.cr || '')}</textarea>
-    <button class="btn big mail" data-act="compose" data-k="cr">📤 Envoyer le compte rendu aux parents</button>
+    <button class="btn big mail" data-act="compose" data-k="cr">📲 Envoyer le compte rendu au groupe parents</button>
     <button class="btn big ghost" data-act="copyCr">Copier le compte rendu</button>
   </div>`;
   return h;
@@ -434,7 +434,7 @@ function pollView(e) {
   <div class="sum"><span class="p">👍 ${Y.length} oui</span><span class="a">👎 ${N.length} non</span><span class="n">❔ ${Q.length} sans réponse</span></div>
   <p class="det" style="margin:0 4px 8px">Note ici les réponses reçues :</p>
   ${S.players.map(p => { const v = r[p.id] || ''; return `<div class="pl ${v === 'Y' ? 'P' : v === 'N' ? 'A' : ''}"><span class="nm">${esc(p.name)}</span><span class="pb"><button data-act="rsvp" data-id="${p.id}" data-s="Y" class="P ${v === 'Y' ? 'on' : ''}">👍</button><button data-act="rsvp" data-id="${p.id}" data-s="N" class="A ${v === 'N' ? 'on' : ''}">👎</button></span></div>`; }).join('')}
-  ${Q.length ? `<button class="btn big mail" data-act="pollRelance">🔔 Relancer les ${Q.length} sans réponse</button>` : ''}
+  ${Q.length ? `<button class="btn big wa" data-act="pollRelance">🔔 Relancer dans le groupe les ${Q.length} sans réponse</button>` : ''}
   ${Y.length && e.type === 'match' ? `<button class="btn big" data-act="pollConv">📣 Convoquer les ${Y.length} « oui »</button>` : ''}
   ${Y.length && e.type !== 'match' ? `<button class="btn big ghost" data-act="pollPres">✅ Noter les « non » comme excusés</button>` : ''}`;
 }
@@ -545,7 +545,7 @@ function presView(e) {
   h += `<p class="det" style="text-align:center">✓ présent · ✗ absent · E excusé (retouche pour annuler)</p>`;
   const A = by('A'), E = by('E');
   if (A.length || E.length) h += `<div class="card"><div><b class="a">Absents :</b> ${A.join(', ') || '—'}</div><div style="margin-top:6px"><b class="e">Excusés :</b> ${E.join(', ') || '—'}</div>
-    ${A.length ? `<button class="btn big mail" data-act="compose" data-k="abs">📩 Envoyer un message aux parents des absents (${A.length})</button>` : ''}</div>`;
+</div>`;
   h += `<button class="btn big wa" data-act="resp">📋 Envoyer la feuille de présence à ${esc(respName())}</button>`;
   return h;
 }
@@ -578,20 +578,10 @@ function convView(e) {
   <div class="card">
     <div class="th"><b>👥 Joueurs</b><span><button class="btn ghost sm" data-act="convAll" data-id="${t.id}">Tous</button> <button class="btn ghost sm" data-act="convNone" data-id="${t.id}">Aucun</button></span></div>
     <div class="chips"><span class="tag" style="background:var(--ok2);color:var(--ok)">✅ Convoqués : ${yes.length}</span><span class="tag" style="background:var(--o2);color:var(--o)">❌ Non convoqués : ${no.length}</span></div>
-    ${(() => { const r = e.rsvp || {}; const Y = yes.filter(p => r[p.id] === 'Y').length, N = yes.filter(p => r[p.id] === 'N').length, Q = yes.length - Y - N;
-      const extra = S.players.filter(p => r[p.id] === 'Y' && !t.conv.includes(p.id));
-      return `<div class="info" style="margin-bottom:4px"><b>Réponses des parents</b> (convoqués) : <span class="p">👍 ${Y} présent${Y > 1 ? 's' : ''}</span> · <span class="a">👎 ${N} absent${N > 1 ? 's' : ''}</span> · <span class="n">❔ ${Q} sans réponse</span><br><small>Touche 👍 ou 👎 à côté d'un enfant quand un parent répond (dans le groupe ou en privé). Les réponses du <b>Sondage</b> s'affichent ici aussi.</small>
-        ${N ? `<div style="margin-top:6px"><b class="a">Absents annoncés :</b> ${yes.filter(p => r[p.id] === 'N').map(p => esc(p.name)).join(', ')}</div>` : ''}
-        ${Q && yes.length ? `<button class="btn mail sm" style="margin-top:8px" data-act="relanceConv">🔔 Relancer les ${Q} sans réponse</button>` : ''}
-        ${extra.length ? `<button class="btn sm" style="margin-top:8px" data-act="convYes" data-id="${t.id}">📣 Convoquer les ${extra.length} « oui » du sondage</button>` : ''}</div>`; })()}
     ${S.players.length ? '' : '<p class="det">Ajoute d\'abord tes joueurs (onglet Joueurs).</p>'}
     <div style="margin-top:6px">${S.players.map(p => {
       const on = t.conv.includes(p.id);
-      const rv = (e.rsvp || {})[p.id] || '';
-      return `<div class="rp ${on ? '' : 'nc'}"><span class="nm" style="${rv === 'N' ? 'color:var(--r);text-decoration:line-through' : ''}">${esc(p.name)}${p.lic === false ? ' <small class="miss">⚠️ licence</small>' : ''}</span><span class="rpb">
-        <button data-act="rsvp" data-id="${p.id}" data-s="Y" class="${rv === 'Y' ? 'on' : ''}" style="--tc:var(--ok);min-width:38px" title="A répondu présent">👍</button>
-        <button data-act="rsvp" data-id="${p.id}" data-s="N" class="${rv === 'N' ? 'on' : ''}" style="--tc:var(--r);min-width:38px" title="A répondu absent">👎</button>
-        <button data-act="assign" data-p="${p.id}" data-id="${on ? '' : t.id}" class="${on ? 'on' : ''}" style="--tc:var(--g);min-width:96px">${on ? '✅ Convoqué' : 'Pas convoqué'}</button></span></div>`;
+      return `<div class="rp ${on ? '' : 'nc'}"><span class="nm">${esc(p.name)}${p.lic === false ? ' <small class="miss">⚠️ licence</small>' : ''}</span><span class="rpb"><button data-act="assign" data-p="${p.id}" data-id="${on ? '' : t.id}" class="${on ? 'on' : ''}" style="--tc:var(--ok);min-width:120px">${on ? '✅ Convoqué' : 'Pas convoqué'}</button></span></div>`;
     }).join('')}</div>
     ${no.length && yes.length ? `<p class="det" style="margin-top:10px"><b>Non convoqués :</b> ${no.map(p => esc(p.name)).join(', ')}</p>` : ''}
     <details style="margin-top:8px"><summary><b>📋 Liste convoqués / non convoqués</b></summary>
@@ -602,7 +592,7 @@ function convView(e) {
   <div class="card">
     <label style="margin-top:0">Message de convocation (modifiable avant envoi)<textarea id="msg-${t.id}" rows="16">${esc(msg(e, t))}</textarea></label>
     <button class="btn big wa" data-act="wa" data-id="${t.id}">📲 Envoyer au groupe parents</button>
-    <div class="row2" style="margin-top:8px"><button class="btn mail" data-act="compose" data-k="conv" data-id="${t.id}">📤 SMS / mail</button><button class="btn ghost" data-act="copy" data-id="${t.id}">Copier</button></div>
+    <button class="btn big ghost" data-act="copy" data-id="${t.id}">Copier le message</button>
     <button class="btn big ghost" data-act="convResp" data-id="${t.id}">📲 Envoyer la convocation à ${esc(respName())}</button>
     <button class="btn big ghost red" data-act="convClear" data-id="${t.id}">🗑️ Effacer cette convocation</button>
   </div>`;
@@ -630,58 +620,29 @@ function setKind(kind) {
 }
 function composeView() {
   const c = view.compose, e = S.events.find(x => x.id === c.eventId);
-  let kinds = e ? [['info', 'Info'], ['cancel', 'Annulation'], ['abs', 'Absence'], ['cr', 'Compte rendu'], ['free', 'Libre']] : [['free', 'Libre']];
+  let kinds = e ? [['info', 'Info'], ['cancel', 'Annulation'], ['cr', 'Compte rendu'], ['free', 'Libre']] : [['free', 'Libre']];
   if (c.teamId) kinds.unshift(['conv', 'Convocation']);
-  const sel = S.players.filter(p => c.sel.includes(p.id));
-  const nums = [...new Set(sel.flatMap(phones).map(cleanNum))], ms = [...new Set(sel.flatMap(mails))];
-  const none = sel.filter(p => !phones(p).length && !mails(p).length);
-  const chips = [['all', 'Tous']];
-  if (e) {
-    if (e.type === 'match' && (e.teams || []).some(t => t.conv.length)) chips.push(['conv', 'Convoqués']);
-    chips.push(['P', 'Présents'], ['A', 'Absents']);
-  }
-  chips.push(['none', 'Aucun']);
   return `<div class="bar"><button class="btn ghost" data-act="back">← Retour</button></div>
   ${e ? `<div class="card"><span class="badge ${e.type}">${e.type === 'match' ? cap(kindOf(e)) : 'Séance'}</span> <b>${cap(fmtDate(e.date))}</b></div>` : ''}
   <div class="card">
-    <b>Type de message</b>
+    <b>Message au groupe des parents</b>
     <div class="chips">${kinds.map(([k, l]) => `<button class="chip ${c.kind === k ? 'on' : ''}" data-act="cmpKind" data-v="${k}">${l}</button>`).join('')}</div>
-    <label>Objet (pour les mails)<input data-f="cmp.subject" value="${esc(c.subject)}"></label>
-    <label>Message<textarea data-f="cmp.text" rows="10">${esc(c.text)}</textarea></label>
-    <p class="det">Astuce : <b>{nom}</b> est remplacé par le nom de l'enfant dans les envois un par un (et par « votre enfant » dans les envois groupés).</p>
-  </div>
-  <div class="card">
-    <b>Destinataires : ${sel.length} enfant${sel.length > 1 ? 's' : ''}</b>
-    <div class="chips">${chips.map(([k, l]) => `<button class="chip" data-act="cmpSel" data-v="${k}">${l}</button>`).join('')}</div>
-    <div class="chk">${S.players.map(p => `<label class="ck ${c.sel.includes(p.id) ? 'on' : ''}"><input type="checkbox" data-cmp="${p.id}" ${c.sel.includes(p.id) ? 'checked' : ''}><span>${esc(p.name)}</span></label>`).join('')}</div>
-    ${none.length ? `<p class="miss">⚠️ Sans téléphone ni mail : ${none.map(p => esc(p.name)).join(', ')} (à compléter dans Joueurs)</p>` : ''}
-  </div>
-  <h3>Envoi groupé</h3>
-  <div class="card">
-    <button class="btn big" data-act="smsAll" ${nums.length ? '' : 'disabled style="opacity:.5"'}>💬 SMS à tous (${nums.length} numéro${nums.length > 1 ? 's' : ''})</button>
-    <button class="btn big mail" data-act="mailAll" ${ms.length ? '' : 'disabled style="opacity:.5"'}>✉️ Mail à tous (${ms.length} adresse${ms.length > 1 ? 's' : ''}, en copie cachée)</button>
-    <div class="row2" style="margin-top:10px"><button class="btn wa" data-act="waGroup">📲 Groupe parents</button><button class="btn ghost" data-act="copyCmp">Copier</button></div>
-    <p class="det">L'appli prépare le message dans ton appli SMS / mail / WhatsApp : il ne reste qu'à appuyer sur Envoyer.</p>
-  </div>
-  <h3>Un par un (message personnalisé)</h3>
-  <div class="card">${sel.length ? sel.map(p => {
-    const ph = phones(p), ml = mails(p);
-    let b = '';
-    ph.forEach((n, i) => { b += `<button class="btn sm" data-act="sms1" data-id="${p.id}" data-i="${i}">💬${ph.length > 1 ? ' P' + (i + 1) : ' SMS'}</button><button class="btn sm wa" data-act="wa1" data-id="${p.id}" data-i="${i}">WA${ph.length > 1 ? ' P' + (i + 1) : ''}</button>`; });
-    if (ml.length) b += `<button class="btn sm mail" data-act="mail1" data-id="${p.id}">✉️</button>`;
-    return `<div class="rc ${c.done.includes(p.id) ? 'done' : ''}"><span class="nm">${esc(p.name)}</span><span class="rcb">${b || '<span class="miss">pas de contact</span>'}</span></div>`;
-  }).join('') : '<p class="det">Aucun destinataire sélectionné.</p>'}</div>`;
+    <label>Message (modifiable)<textarea data-f="cmp.text" rows="12">${esc(c.text)}</textarea></label>
+    <button class="btn big wa" data-act="waGroup">📲 Envoyer au groupe parents</button>
+    <button class="btn big ghost" data-act="copyCmp">Copier le message</button>
+    <p class="det">Le message est copié et WhatsApp s'ouvre sur le groupe : appui long dans la zone de texte → Coller → Envoyer.</p>
+  </div>`;
 }
 
 /* ---------- JOUEURS ---------- */
 function playersView() {
-  return `<button class="btn big mail" style="margin-top:0" data-act="compose" data-k="free">✉️ Message à tous les parents</button>
+  return `<button class="btn big mail" style="margin-top:0" data-act="compose" data-k="free">📲 Message au groupe parents</button>
   <div class="card" style="margin-top:10px"><label>Ajouter des joueurs (un nom par ligne)<textarea id="newpl" rows="3" placeholder="Lucas Martin&#10;Inès Bernard&#10;..."></textarea></label><button class="btn big" data-act="addPl">Ajouter</button></div>
 
-  <h3>${S.players.length} joueur${S.players.length > 1 ? 's' : ''} · touche pour ajouter téléphone et mail</h3>`
+  <h3>${S.players.length} joueur${S.players.length > 1 ? 's' : ''} · touche un nom pour sa fiche</h3>`
     + S.players.map(p => {
       const np = phones(p).length, nm = mails(p).length;
-      return `<div class="card prow" data-act="editPl" data-id="${p.id}"><b>${esc(p.name)}${p.test ? ' <span class="tag">essai</span>' : ''}</b><span>${np || nm ? `<span class="tag">📱 ${np}</span> <span class="tag">✉️ ${nm}</span>` : '<span class="miss">⚠️ pas de contact</span>'}${p.lic === false ? ' <span class="miss">⚠️ licence</span>' : ''} <button class="btn ghost red sm" style="padding:5px 9px;margin-left:4px" data-act="delPl" data-id="${p.id}" aria-label="Supprimer">🗑️</button></span></div>`;
+      return `<div class="card prow" data-act="editPl" data-id="${p.id}"><b>${esc(p.name)}${p.test ? ' <span class="tag">essai</span>' : ''}</b><span>${np ? `<span class="tag">📱 ${np}</span>` : ''}${p.lic === false ? ' <span class="miss">⚠️ licence</span>' : ''} <button class="btn ghost red sm" style="padding:5px 9px;margin-left:4px" data-act="delPl" data-id="${p.id}" aria-label="Supprimer">🗑️</button></span></div>`;
     }).join('');
 }
 function editPlView() {
@@ -693,8 +654,6 @@ function editPlView() {
     ${f('name', 'Nom de l\'enfant', 'text', '')}
     ${f('tel', 'Téléphone parent 1', 'tel', '06 12 34 56 78')}
     ${f('tel2', 'Téléphone parent 2', 'tel', 'facultatif')}
-    ${f('mail', 'Mail parent 1', 'email', 'parent@mail.com')}
-    ${f('mail2', 'Mail parent 2', 'email', 'facultatif')}
     ${f('note', 'Remarque', 'text', 'ex : allergie…')}
     <div class="seg"><button data-act="lic" data-id="${p.id}" data-v="1" class="${p.lic !== false ? 'on' : ''}">✅ Licence OK</button><button data-act="lic" data-id="${p.id}" data-v="0" class="${p.lic === false ? 'on' : ''}">⚠️ Pas de licence</button></div>
   </div>
@@ -782,7 +741,6 @@ function settingsView() {
     <div class="row2"><label>Club<input data-f="set.club" value="${esc(S.settings.club)}"></label><label>Catégorie<input data-f="set.cat" value="${esc(S.settings.cat)}" placeholder="U6"></label></div>
     <label>À prévoir (équipement)<input data-f="set.equip" value="${esc(S.settings.equip)}"></label>
     <label>Signature<input data-f="set.sig" value="${esc(S.settings.sig)}" placeholder="ex : Coach Anthony – 06 xx xx xx xx"></label>
-    <label>Ton mail (mis en destinataire des mails groupés, les parents en copie cachée)<input type="email" data-f="set.mail" value="${esc(S.settings.mail || '')}"></label>
   </div>
   <h3>Groupe WhatsApp des parents</h3>
   <div class="card">
@@ -918,17 +876,12 @@ const ACT = {
   pollCopyQ: () => copy(pollQ(curEv())),
   pollRelance: () => {
     const e = curEv(), r = e.rsvp || {};
+    const names = S.players.filter(p => !r[p.id]).map(p => p.name).join(', ');
     openCompose('free');
-    view.compose.sel = S.players.filter(p => !r[p.id]).map(p => p.id);
-    view.compose.text = `Bonjour,
-
-Petit rappel 🙂 ${pollQ(e)}
-Merci de me répondre OUI ou NON pour {nom}.
-
-${S.settings.sig || ''}`;
-    view.compose.subject = 'Rappel – ' + pollQ(e);
+    view.compose.text = `Bonjour à tous,\n\nPetit rappel 🙂 ${pollQ(e)}\nIl me manque la réponse pour : ${names}.\nMerci de répondre OUI ou NON.\n\n${S.settings.sig || ''}`;
     render();
   },
+
   pollConv: () => { const e = curEv(), r = e.rsvp || {}; const ids = S.players.filter(p => r[p.id] === 'Y').map(p => p.id); e.teams.forEach((t, i) => t.conv = i === 0 ? ids : t.conv.filter(x => !ids.includes(x))); save(); view.sub = 'conv'; render(); toast(ids.length + ' joueurs convoqués ✔'); },
   pollPres: () => { const e = curEv(), r = e.rsvp || {}; S.players.forEach(p => { if (!e.presence[p.id]) { if (r[p.id] === 'N') e.presence[p.id] = 'E'; } }); save(); view.sub = 'presence'; render(); toast('Les « non » sont notés excusés'); },
   statSub: b => { view.statSub = b.dataset.v; render(); },
