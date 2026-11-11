@@ -82,6 +82,8 @@ input:focus,textarea:focus{outline:2px solid var(--g);border-color:transparent}
 .day.today{box-shadow:inset 0 0 0 2px var(--g)}
 .day.sel{background:var(--g);color:#fff}
 .day.pick{background:var(--b);color:#fff}
+.del .day.pick{background:var(--r)}
+.del .dow{color:var(--r);background:var(--r2)}
 .dots{display:flex;gap:3px;height:7px;margin-top:3px}
 .dot{width:7px;height:7px;border-radius:50%;background:var(--g)}
 .dot.match{background:var(--b)}
@@ -303,17 +305,29 @@ function eventsView() {
     return `<button class="${c}" data-act="day" data-d="${d}"><span>${+d.slice(8)}</span><span class="dots">${evs.slice(0, 3).map(e => `<i class="dot ${e.type}"></i>`).join('')}</span></button>`;
   }).join('');
 
-  let h = `<div class="card ${view.multi ? 'multi' : ''}">
+  let h = `<div class="card ${view.multi ? 'multi' : ''} ${view.multi === 'del' ? 'del' : ''}">
     <div class="calh"><button data-act="prevM">◀</button><b>${MOIS[m - 1]} ${y}</b><button data-act="nextM">▶</button></div>
     <div class="grid">${grid}</div>
     <div class="legend"><span><i style="background:var(--g)"></i>Séance</span><span><i style="background:var(--b)"></i>Plateau / match</span></div>
   </div>`;
 
+  if (view.multi === 'del') {
+    const pk = [...view.picked].sort();
+    const evs = S.events.filter(e => pk.includes(e.date)).sort((a, b) => a.date.localeCompare(b.date));
+    h += `<div class="card">
+      <div class="th"><b>🗑️ Supprimer plusieurs dates</b><button class="btn ghost sm" data-act="multiOff">Annuler</button></div>
+      <div class="info">Touche les jours à supprimer dans le calendrier, ou une <b>lettre</b> en haut (ex : <b>M</b> = tous les mercredis du mois). Tu peux changer de mois et continuer.</div>
+      <b>${evs.length} séance${evs.length > 1 ? 's' : ''} / plateau${evs.length > 1 ? 'x' : ''} sélectionné${evs.length > 1 ? 's' : ''}</b>${pk.length ? ` <button class="btn ghost sm" data-act="clearPick">Vider</button>` : ''}
+      <div style="margin-top:6px">${evs.map(e => `<div class="hist"><span>${e.type === 'match' ? '⚽ ' + cap(kindOf(e)) : '🏃 Séance'} – ${cap(fmtShort(e.date))}</span>${Object.keys(e.presence).length ? '<small class="n">pointée</small>' : ''}</div>`).join('') || '<p class="det">Aucune séance sur les jours choisis.</p>'}</div>
+      <button class="btn big" style="background:var(--r)" data-act="bulkDel" ${evs.length ? '' : 'disabled style="opacity:.5"'}>🗑️ Supprimer ${evs.length || ''} élément${evs.length > 1 ? 's' : ''}</button>
+    </div>`;
+    return h;
+  }
   if (view.multi) {
     const pk = [...view.picked].sort();
     const B = view.bulk;
     h += `<div class="card">
-      <div class="th"><b>🗓️ Planifier plusieurs dates</b><button class="btn ghost sm" data-act="multi">Annuler</button></div>
+      <div class="th"><b>🗓️ Planifier plusieurs dates</b><button class="btn ghost sm" data-act="multiOff">Annuler</button></div>
       <div class="info">Touche les jours dans le calendrier, ou une <b>lettre</b> en haut (ex : <b>M</b> du mercredi) pour prendre <b>tous ces jours du mois</b>. Tu peux changer de mois et continuer.</div>
       <b>${pk.length} date${pk.length > 1 ? 's' : ''} choisie${pk.length > 1 ? 's' : ''}</b>${pk.length ? ` <button class="btn ghost sm" data-act="clearPick">Vider</button>` : ''}
       <div class="chips">${pk.map(d => `<span class="tag">${cap(fmtShort(d))}</span>`).join('')}</div>
@@ -321,13 +335,12 @@ function eventsView() {
       <div class="row2"><label>${B.type === 'match' ? 'Coup d\'envoi' : 'Début'}<input type="time" data-f="bulk.time" value="${B.time}"></label>${B.type === 'match' ? '<span></span>' : `<label>Fin<input type="time" data-f="bulk.end" value="${B.end}"></label>`}</div>
       <label>Lieu<input data-f="bulk.lieu" value="${esc(B.lieu)}" placeholder="ex : Stade municipal"></label>
       <button class="btn big ${B.type === 'match' ? 'blue' : ''}" data-act="bulkCreate" ${pk.length ? '' : 'disabled style="opacity:.5"'}>Créer ${pk.length || ''} ${B.type === 'match' ? 'match' : 'séance'}${pk.length > 1 ? 's' : ''}</button>
-      ${pk.some(d => by[d]) ? `<button class="btn big ghost red" data-act="bulkDel">🗑️ Supprimer ce qui est prévu sur ces ${pk.filter(d => by[d]).length} date(s)</button>` : ''}
     </div>`;
     return h;
   }
 
   h += `<div class="row2"><button class="btn big" data-act="newEv" data-type="seance">+ Séance</button><button class="btn big match" data-act="newEv" data-type="match">+ Plateau / Match</button></div>
-  <button class="btn big ghost" data-act="multi">🗓️ Planifier plusieurs dates (ex : tous les mercredis)</button>`;
+  <div class="row2" style="margin-top:10px"><button class="btn ghost" data-act="multi">🗓️ Créer plusieurs dates</button><button class="btn ghost red" data-act="multiDel">🗑️ Supprimer plusieurs dates</button></div>`;
   if (!S.players.length) h += `<div class="hint">👋 Commence par ajouter tes joueurs dans l'onglet <b>Joueurs</b>.</div>`;
   else if (S.players.some(p => !p.test) && (!S.settings.lastExport || (parse(TODAY) - parse(S.settings.lastExport)) / 864e5 >= 14))
     h += `<div class="hint">💾 Pense à sauvegarder tes données (dernière : ${S.settings.lastExport ? fmtShort(S.settings.lastExport) : 'jamais'}). <button class="btn sm" data-act="export">Sauvegarder</button></div>`;
@@ -347,6 +360,16 @@ function eventView() {
   const e = curEv();
   if (!e) { view.eventId = null; return eventsView(); }
   const isM = e.type === 'match';
+  if (view.draft) return `<div class="card">
+    <b style="font-size:18px">${isM ? '⚽ Nouveau plateau / match' : '🏃 Nouvelle séance'}</b>
+    <div class="seg"><button data-act="setType" data-type="seance" class="${!isM ? 'on' : ''}">Séance</button><button data-act="setType" data-type="match" class="${isM ? 'on' : ''}">Plateau / Match</button></div>
+    <label>Date<input type="date" data-f="ev.date" value="${e.date}"></label>
+    ${isM ? '<p class="det">Le lieu, les horaires et les joueurs se remplissent à l\'étape suivante (convocation).</p>' : `<div class="row2"><label>Début<input type="time" data-f="ev.time" value="${e.time || ''}"></label><label>Fin<input type="time" data-f="ev.end" value="${e.end || ''}"></label></div>
+    <label>Lieu<input data-f="ev.lieu" value="${esc(e.lieu || '')}" placeholder="ex : Stade municipal"></label>
+    <label>Note (facultatif)<input data-f="ev.note" value="${esc(e.note || '')}" placeholder="ex : motricité, 2 ateliers"></label>`}
+    <button class="btn big" data-act="validate">✅ Valider${isM ? ' et faire la convocation' : ' et faire l\'appel'}</button>
+    <button class="btn big ghost red" data-act="cancelDraft">Annuler</button>
+  </div>`;
   let h = `<div class="bar"><button class="btn ghost" data-act="back">← Retour</button><button class="btn ghost red" data-act="delEv">Supprimer</button></div>
   <div class="card">
     <div class="seg" style="margin-top:0"><button data-act="setType" data-type="seance" class="${!isM ? 'on' : ''}">Séance</button><button data-act="setType" data-type="match" class="${isM ? 'on' : ''}">Plateau / Match</button></div>
@@ -588,7 +611,7 @@ function composeView() {
 function playersView() {
   return `<button class="btn big mail" style="margin-top:0" data-act="compose" data-k="free">✉️ Message à tous les parents</button>
   <div class="card" style="margin-top:10px"><label>Ajouter des joueurs (un nom par ligne)<textarea id="newpl" rows="3" placeholder="Lucas Martin&#10;Inès Bernard&#10;..."></textarea></label><button class="btn big" data-act="addPl">Ajouter</button></div>
-  ${S.players.some(p => p.test) ? '' : `<button class="btn big ghost" data-act="addTest">🧪 Ajouter 5 joueurs d'essai (pour tester)</button>`}
+
   <h3>${S.players.length} joueur${S.players.length > 1 ? 's' : ''} · touche pour ajouter téléphone et mail</h3>`
     + S.players.map(p => {
       const np = phones(p).length, nm = mails(p).length;
@@ -841,7 +864,7 @@ ${S.settings.sig || ''}`;
     e.cr = (e.cr ? e.cr.replace(/\s*$/, '\n\n') : '') + plan; save(); render();
   },
   copyCr: () => copy(tpl('cr', curEv())),
-  tab: b => { view = { ...view, tab: b.dataset.tab, eventId: null, playerId: null, editPl: null, compose: null, resp: null }; render(); scrollTo(0, 0); },
+  tab: b => { view = { ...view, tab: b.dataset.tab, eventId: null, playerId: null, editPl: null, compose: null, resp: null, draft: false }; render(); scrollTo(0, 0); },
   prevM: () => shiftMonth(-1),
   nextM: () => shiftMonth(1),
   day: b => {
@@ -851,14 +874,16 @@ ${S.settings.sig || ''}`;
     render();
   },
   dow: b => {
-    if (!view.multi) { view.multi = true; view.picked = []; }
+    if (!view.multi) { view.multi = 'plan'; view.picked = []; }
     const i = +b.dataset.i;
     const ds = monthDays().filter(d => (parse(d).getDay() + 6) % 7 === i);
     const all = ds.every(d => view.picked.includes(d));
     view.picked = all ? view.picked.filter(d => !ds.includes(d)) : [...new Set([...view.picked, ...ds])];
     render();
   },
-  multi: () => { view.multi = !view.multi; view.picked = []; render(); },
+  multi: () => { view.multi = 'plan'; view.picked = []; render(); },
+  multiDel: () => { view.multi = 'del'; view.picked = []; render(); scrollTo(0, 0); },
+  multiOff: () => { view.multi = false; view.picked = []; render(); },
   clearPick: () => { view.picked = []; render(); },
   bulkType: b => { view.bulk.type = b.dataset.v; render(); },
   bulkCreate: () => {
@@ -870,18 +895,27 @@ ${S.settings.sig || ''}`;
   },
   newEv: b => {
     const type = b.dataset.type;
-    const e = createEvent(type, b.dataset.d || (type === 'match' ? nextSaturday() : TODAY));
+    const last = S.events.filter(x => x.type === 'seance').sort((a, c) => c.date.localeCompare(a.date))[0] || {};
+    const e = type === 'seance'
+      ? createEvent(type, b.dataset.d || TODAY, last.time || '', last.end || '', last.lieu || '')
+      : createEvent(type, b.dataset.d || nextSaturday());
     save();
-    view.eventId = e.id; view.sub = type === 'match' ? 'conv' : 'presence'; render(); scrollTo(0, 0);
+    view.eventId = e.id; view.draft = true; view.sub = type === 'match' ? 'conv' : 'presence'; render(); scrollTo(0, 0);
   },
-  openEv: (b, id) => { view.eventId = id; view.sub = (S.events.find(e => e.id === id) || {}).type === 'match' ? 'conv' : 'presence'; render(); scrollTo(0, 0); },
+  validate: () => {
+    const e = curEv(); view.draft = false; view.sub = e.type === 'match' ? 'conv' : 'presence'; save(); render();
+    const el = document.querySelector('.seg.big'); if (el) el.scrollIntoView({ block: 'start' }); else scrollTo(0, 0);
+    toast(e.type === 'match' ? 'Créé ✔ Prépare la convocation' : 'Séance créée ✔ Coche les présences');
+  },
+  cancelDraft: () => { S.events = S.events.filter(e => e.id !== view.eventId); save(); view.draft = false; view.eventId = null; render(); scrollTo(0, 0); },
+  openEv: (b, id) => { view.draft = false; view.eventId = id; view.sub = (S.events.find(e => e.id === id) || {}).type === 'match' ? 'conv' : 'presence'; render(); scrollTo(0, 0); },
   openPl: (b, id) => { view.editPl = null; view.playerId = id; render(); scrollTo(0, 0); },
   editPl: (b, id) => { view.editPl = id; render(); scrollTo(0, 0); },
   back: () => {
     if (view.resp) { view = { ...view, ...view.resp.prev, resp: null }; }
     else if (view.compose) { view = { ...view, ...view.compose.prev, compose: null }; }
     else if (view.editPl) { view.editPl = null; if (view.playerId) view.playerId = null; }
-    else { view.eventId = null; view.playerId = null; }
+    else { view.eventId = null; view.playerId = null; view.draft = false; }
     render(); scrollTo(0, 0);
   },
   delEv: () => { if (confirm('Supprimer cet événement ?')) { S.events = S.events.filter(e => e.id !== view.eventId); save(); ACT.back(); } },
@@ -927,7 +961,7 @@ ${S.settings.sig || ''}`;
   respShare: async () => { const text = document.getElementById('rapport').value; if (navigator.share) { try { await navigator.share({ text }); } catch (e) {} } else copy(text); },
   respCopy: () => copy(document.getElementById('rapport').value),
   delCard: (b, id) => { const e = S.events.find(x => x.id === id); if (!e || !confirm('Supprimer ' + (e.type === 'match' ? 'le ' + kindOf(e) : 'la séance') + ' du ' + fmtDate(e.date) + ' ?')) return; S.events = S.events.filter(x => x.id !== id); save(); render(); toast('Supprimé ✔'); },
-  bulkDel: () => { const ids = S.events.filter(e => view.picked.includes(e.date)); if (!confirm('Supprimer ' + ids.length + ' séance(s) / plateau(x) sur les dates choisies ?')) return; S.events = S.events.filter(e => !view.picked.includes(e.date)); save(); view.multi = false; view.picked = []; render(); toast(ids.length + ' supprimé(s) ✔'); },
+  bulkDel: () => { const ids = S.events.filter(e => view.picked.includes(e.date)); if (!ids.length || !confirm('Supprimer définitivement ' + ids.length + ' séance(s) / plateau(x) ?')) return; S.events = S.events.filter(e => !view.picked.includes(e.date)); save(); view.multi = false; view.picked = []; render(); toast(ids.length + ' supprimé(s) ✔'); },
   convClear: (b, id) => { if (!confirm('Effacer cette convocation (joueurs, horaires, lieu) ?')) return; const t = team(id); Object.assign(t, { name: '', adv: '', lieu: '', adr: '', rdv: '', ko: '', conv: [] }); save(); render(); toast('Convocation effacée'); },
   convResp: (b, id) => { const t = S.settings.respTel; if (!t) { alert('Ajoute le numéro de ' + respName() + ' dans Réglages → Responsable.'); return; } window.open('https://wa.me/' + intl(t) + '?text=' + encodeURIComponent(document.getElementById('msg-' + id).value), '_blank'); },
   lic: (b, id) => { player(id).lic = b.dataset.v === '1'; save(); render(); },
